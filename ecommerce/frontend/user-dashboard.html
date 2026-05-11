@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ShopPremium</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white" style="box-shadow:var(--shadow)">
+    <div class="container">
+        <a class="navbar-brand" href="index.html">Shop<span>Premium</span></a>
+        <button class="navbar-toggler border-0" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="shop.html">Shop</a></li>
+            </ul>
+            <div class="nav-icons d-flex align-items-center gap-2">
+                <div class="dropdown" id="userMenu">
+                    <a class="btn dropdown-toggle" data-bs-toggle="dropdown"><i class="far fa-user"></i> <span id="userName"></span></a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="user-dashboard.html">Dashboard</a></li>
+                        <li><a class="dropdown-item" href="order-history.html">My Orders</a></li>
+                        <li id="adminLink" style="display:none"><a class="dropdown-item" href="admin/dashboard.html">Admin Panel</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="logoutBtn">Logout</a></li>
+                    </ul>
+                </div>
+                <a href="cart.html" class="btn"><i class="fas fa-shopping-bag"></i><span class="cart-count">0</span></a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<section class="dashboard-section py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">My Dashboard</h2>
+                <p class="text-muted mb-0">Welcome back, <span id="userName"></span></p>
+            </div>
+            <a href="shop.html" class="btn btn-primary rounded-pill px-4"><i class="fas fa-plus me-2"></i>Shop Now</a>
+        </div>
+
+        <!-- Stats -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-3 col-6">
+                <div class="dashboard-card">
+                    <div class="icon blue"><i class="fas fa-shopping-bag"></i></div>
+                    <div class="number" id="totalOrders">0</div>
+                    <div class="label">Total Orders</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="dashboard-card">
+                    <div class="icon yellow"><i class="fas fa-clock"></i></div>
+                    <div class="number" id="pendingOrders">0</div>
+                    <div class="label">Pending Orders</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="dashboard-card">
+                    <div class="icon green"><i class="fas fa-check-circle"></i></div>
+                    <div class="number" id="completedOrders">0</div>
+                    <div class="label">Completed</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="dashboard-card">
+                    <div class="icon red"><i class="fas fa-heart"></i></div>
+                    <div class="number" id="wishlistCount">0</div>
+                    <div class="label">Wishlist Items</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm p-4">
+                    <h4 class="fw-bold mb-4">Profile Information</h4>
+                    <div class="mb-4">
+                        <p><strong>Name:</strong> <span id="userName"></span></p>
+                        <p><strong>Email:</strong> <span id="userEmail"></span></p>
+                        <p><strong>Phone:</strong> <span id="userPhone"></span></p>
+                    </div>
+                    <hr>
+                    <h5 class="fw-bold mb-3">Update Profile</h5>
+                    <form id="profileForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="editName">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="editPhone">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Address</label>
+                                <input type="text" class="form-control" id="editAddress">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" id="editCity">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">State</label>
+                                <input type="text" class="form-control" id="editState">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">ZIP Code</label>
+                                <input type="text" class="form-control" id="editZip">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Country</label>
+                                <input type="text" class="form-control" id="editCountry">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Update Profile</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm p-4">
+                    <h5 class="fw-bold mb-3">Quick Links</h5>
+                    <div class="d-grid gap-2">
+                        <a href="order-history.html" class="btn btn-outline-primary"><i class="fas fa-truck me-2"></i>My Orders</a>
+                        <a href="shop.html" class="btn btn-outline-primary"><i class="fas fa-shopping-bag me-2"></i>Browse Products</a>
+                        <a href="cart.html" class="btn btn-outline-primary"><i class="fas fa-shopping-cart me-2"></i>View Cart</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

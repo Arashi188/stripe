@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopPremium - Your Premium Shopping Destination</title>
+    <meta name="description" content="Discover premium products at unbeatable prices. Shop the latest trends in fashion, electronics, and more.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar navbar-expand-lg navbar-light fixed-top bg-transparent">
+    <div class="container">
+        <a class="navbar-brand" href="index.html">Shop<span>Premium</span></a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="shop.html">Shop</a></li>
+                <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-icons d-flex align-items-center gap-2">
+                <a href="shop.html" class="btn"><i class="fas fa-search"></i></a>
+                <a href="login.html" class="btn" id="loginLink"><i class="far fa-user"></i></a>
+                <div class="dropdown" id="userMenu" style="display:none">
+                    <a class="btn dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="far fa-user"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="user-dashboard.html">Dashboard</a></li>
+                        <li><a class="dropdown-item" href="order-history.html">My Orders</a></li>
+                        <li id="adminLink" style="display:none"><a class="dropdown-item" href="admin/dashboard.html">Admin Panel</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="logoutBtn">Logout</a></li>
+                    </ul>
+                </div>
+                <a href="cart.html" class="btn">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="cart-count">0</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- ===== HERO SECTION ===== -->
+<section class="hero-section">
+    <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1920&q=80')">
+        <div class="container">
+            <div class="hero-content">
+                <span class="badge">New Collection 2026</span>
+                <h1>Discover Premium<br>Fashion & Lifestyle</h1>
+                <p>Explore our curated collection of premium products designed to elevate your everyday style. Quality meets affordability.</p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="shop.html" class="btn btn-primary"><i class="fas fa-shopping-bag me-2"></i>Shop Now</a>
+                    <a href="about.html" class="btn btn-outline-light"><i class="fas fa-info-circle me-2"></i>Explore Products</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1920&q=80')">
+        <div class="container">
+            <div class="hero-content">
+                <span class="badge">Up to 40% Off</span>
+                <h1>Shop the Latest<br>Trends in Electronics</h1>
+                <p>From smart devices to cutting-edge gadgets, discover technology that transforms your world.</p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="shop.html?category=2" class="btn btn-primary"><i class="fas fa-bolt me-2"></i>Shop Electronics</a>
+                    <a href="shop.html" class="btn btn-outline-light"><i class="fas fa-th-large me-2"></i>All Products</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1445205170230-053b83016050?w=1920&q=80')">
+        <div class="container">
+            <div class="hero-content">
+                <span class="badge">Premium Quality</span>
+                <h1>Elevate Your<br>Everyday Essentials</h1>
+                <p>Handpicked collections that combine style, comfort, and durability for the modern lifestyle.</p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="shop.html" class="btn btn-primary"><i class="fas fa-gem me-2"></i>Discover More</a>
+                    <a href="contact.html" class="btn btn-outline-light"><i class="fas fa-headset me-2"></i>Get in Touch</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button class="hero-arrow prev"><i class="fas fa-chevron-left"></i></button>
+    <button class="hero-arrow next"><i class="fas fa-chevron-right"></i></button>
+    <div class="hero-dots">
+        <span class="hero-dot active"></span>
+        <span class="hero-dot"></span>
+        <span class="hero-dot"></span>
+    </div>
+</section>
+
+<!-- ===== FEATURES BANNER ===== -->
+<section class="py-4 bg-white border-bottom">
+    <div class="container">
+        <div class="row text-center g-3">
+            <div class="col-md-3 col-6">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <i class="fas fa-truck-fast fs-3 text-primary"></i>
+                    <div class="text-start"><strong>Free Shipping</strong><br><small class="text-muted">On orders over ₦100</small></div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <i class="fas fa-rotate-left fs-3 text-primary"></i>
+                    <div class="text-start"><strong>Easy Returns</strong><br><small class="text-muted">30-day return policy</small></div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <i class="fas fa-lock fs-3 text-primary"></i>
+                    <div class="text-start"><strong>Secure Payment</strong><br><small class="text-muted">100% secure checkout</small></div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <i class="fas fa-headset fs-3 text-primary"></i>
+                    <div class="text-start"><strong>24/7 Support</strong><br><small class="text-muted">Dedicated customer care</small></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== CATEGORIES ===== -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title fade-in">Shop by Category</h2>
+            <p class="section-subtitle fade-in">Browse our carefully curated categories to find exactly what you need</p>
+        </div>
+        <div class="row" id="categoryGrid"></div>
+    </div>
+</section>
+
+<!-- ===== FEATURED PRODUCTS ===== -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h2 class="section-title fade-in mb-0">Featured Products</h2>
+                <p class="section-subtitle fade-in mb-0">Handpicked favorites just for you</p>
+            </div>
+            <a href="shop.html" class="btn btn-outline-primary rounded-pill px-4 fade-in">View All <i class="fas fa-arrow-right ms-2"></i></a>
+        </div>
+        <div class="row" id="featuredProducts"></div>
+    </div>
+</section>
+
+<!-- ===== FEATURED PRODUCT BANNER ===== -->
+<section class="py-5">
+    <div class="container">
+        <div class="featured-product">
+            <div class="content">
+                <span class="tag">Limited Edition</span>
+                <h2>Premium Wireless<br>Headphones Pro</h2>
+                <p>Experience crystal-clear audio with our premium noise-cancelling headphones. Designed for music lovers who demand the best.</p>
+                <div class="price">₦249.99 <small class="text-muted fs-6"><s>₦399.99</s></small></div>
+                <a href="shop.html" class="btn btn-primary rounded-pill px-4 py-2"><i class="fas fa-bolt me-2"></i>Shop Now</a>
+            </div>
+            <div class="image">
+                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80" alt="Premium Headphones">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== NEWSLETTER ===== -->
+<section class="newsletter-section">
+    <div class="container text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <h2 class="fade-in">Stay in the Loop</h2>
+                <p class="mb-4 fade-in">Subscribe to get special offers, free giveaways, and exclusive deals.</p>
+                <form class="input-group mx-auto" id="newsletterForm">
+                    <input type="email" class="form-control" placeholder="Enter your email address" required>
+                    <button type="submit"><i class="fas fa-paper-plane me-2"></i>Subscribe</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <h5 class="navbar-brand mb-3" style="font-size:1.5rem">Shop<span>Premium</span></h5>
+                <p>Your premium shopping destination. We curate the best products from around the world to bring you quality, style, and value.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <h5>Quick Links</h5>
+                <a href="index.html">Home</a><br>
+                <a href="shop.html">Shop</a><br>
+                <a href="about.html">About Us</a><br>
+                <a href="contact.html">Contact</a><br>
+                <a href="cart.html">Cart</a>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <h5>Categories</h5>
+                <a href="shop.html?category=1">Fashion</a><br>
+                <a href="shop.html?category=2">Electronics</a><br>
+                <a href="shop.html?category=3">Home & Living</a><br>
+                <a href="shop.html?category=4">Accessories</a><br>
+                <a href="shop.html">All Products</a>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <h5>Contact Us</h5>
+                <p><i class="fas fa-map-marker-alt me-2"></i>123 Commerce St, New York, NY 10001</p>
+                <p><i class="fas fa-phone me-2"></i>+1 (555) 123-4567</p>
+                <p><i class="fas fa-envelope me-2"></i>support@shoppremium.com</p>
+                <p><i class="fas fa-clock me-2"></i>Mon - Sat: 9:00 AM - 6:00 PM</p>
+            </div>
+        </div>
+        <div class="footer-bottom d-flex justify-content-between align-items-center flex-wrap">
+            <small>&copy; 2026 ShopPremium. All rights reserved.</small>
+            <div class="mt-2 mt-md-0">
+                <i class="fab fa-cc-visa fs-3 me-2"></i>
+                <i class="fab fa-cc-mastercard fs-3 me-2"></i>
+                <i class="fab fa-cc-amex fs-3 me-2"></i>
+                <i class="fab fa-cc-paypal fs-3"></i>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
