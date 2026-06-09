@@ -52,7 +52,7 @@ const cartManager = {
 
     getTotal: () => {
         const cart = cartManager.getCart();
-        return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        return cart.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
     },
 
     getCount: () => {
@@ -94,14 +94,14 @@ const cartManager = {
                 <img src="${resolveImageUrl(item.image) || 'https://via.placeholder.com/100'}" alt="${item.name}">
                 <div class="ms-3 flex-grow-1">
                     <h6 class="fw-bold mb-1">${item.name}</h6>
-                    <p class="text-muted mb-0">₦${item.price.toFixed(2)}</p>
+                    <p class="text-muted mb-0">₦${(item.price || 0).toFixed(2)}</p>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <button class="btn btn-sm btn-outline-secondary" onclick="cartManager.updateQuantity(${item.productId}, ${item.quantity - 1})">-</button>
                     <span class="fw-bold mx-2">${item.quantity}</span>
                     <button class="btn btn-sm btn-outline-secondary" onclick="cartManager.updateQuantity(${item.productId}, ${item.quantity + 1})">+</button>
                 </div>
-                <div class="ms-3 fw-bold text-primary">₦${(item.price * item.quantity).toFixed(2)}</div>
+                <div class="ms-3 fw-bold text-primary">₦${((item.price || 0) * item.quantity).toFixed(2)}</div>
                 <button class="btn btn-sm text-danger ms-3" onclick="cartManager.removeItem(${item.productId})">
                     <i class="fas fa-trash"></i>
                 </button>

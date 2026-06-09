@@ -1,5 +1,14 @@
-const API_BASE = 'http://localhost:5001/api';
-const UPLOAD_BASE = 'http://localhost:5001';
+// === AFTER deploying backend to Render, replace the line below with your Render URL ===
+// Example: const RENDER_URL = 'https://my-shop-api.onrender.com';
+const RENDER_URL = 'https://YOUR_RENDER_APP_NAME.onrender.com';
+
+const USE_LOCAL = !window.location.hostname
+    || window.location.hostname === 'localhost'
+    || window.location.hostname === '127.0.0.1';
+
+const API_BASE = USE_LOCAL ? 'http://127.0.0.1:5000/api' : RENDER_URL + '/api';
+const UPLOAD_BASE = USE_LOCAL ? 'http://127.0.0.1:5000' : RENDER_URL;
+const FRONTEND_BASE = window.location.origin;
 
 function resolveImageUrl(url) {
     if (!url) return url;
@@ -10,24 +19,47 @@ function resolveImageUrl(url) {
 }
 
 const api = {
-    getToken: () => localStorage.getItem('token'),
+    getToken: () => {
+        const raw = localStorage.getItem('token');
+        if (!raw) return null;
+        return raw.trim().replace(/^Bearer\s+/i, '');
+    },
 
     request: async (endpoint, options = {}) => {
         const token = api.getToken();
+        const isFormData = options.body instanceof FormData;
         const config = {
             headers: {
-                'Content-Type': 'application/json',
+                ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 ...options.headers,
             },
             ...options,
         };
 
-        const response = await fetch(`${API_BASE}${endpoint}`, config);
-        const data = await response.json();
+        let response;
+        try {
+            response = await fetch(`${API_BASE}${endpoint}`, config);
+        } catch (networkErr) {
+            throw new Error(
+                'Cannot reach the server at ' + API_BASE + '. Start the backend (python run.py) on port 5000.'
+            );
+        }
+
+        const raw = await response.text();
+        let data = {};
+        if (raw) {
+            try {
+                data = JSON.parse(raw);
+            } catch (parseErr) {
+                if (!response.ok) {
+                    throw new Error('Server error (' + response.status + '). Restart the backend after updating.');
+                }
+            }
+        }
 
         if (!response.ok) {
-            throw new Error(data.error || data.message || 'Request failed');
+            throw new Error(data.error || data.message || 'Request failed (' + response.status + ')');
         }
 
         return data;
@@ -86,16 +118,8 @@ const api = {
 
     getOrder: (orderId) => api.request(`/orders/${orderId}`),
 
-    // Payment
-    initializePayment: (orderId) => api.request('/payment/initialize', {
-        method: 'POST',
-        body: JSON.stringify({ orderId }),
-    }),
-
-    verifyPayment: (paymentIntentId) => api.request('/payment/verify', {
-        method: 'POST',
-        body: JSON.stringify({ paymentIntentId }),
-    }),
+    // Bank accounts (public list for checkout transfer)
+    getBankAccounts: () => api.request('/secretary/bank-accounts'),
 
     // User
     getProfile: () => api.request('/users/profile'),
@@ -126,6 +150,8 @@ const api = {
 
     // Admin
     admin: {
+        getDashboard: () => api.request('/admin/dashboard'),
+
         createProduct: (data) => api.request('/admin/products', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -140,7 +166,25 @@ const api = {
             method: 'DELETE',
         }),
 
+        getAdminCategories: () => api.request('/admin/categories'),
+
+        createCategory: (data) => api.request('/admin/categories', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+        updateCategory: (id, data) => api.request(`/admin/categories/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+        deleteCategory: (id) => api.request(`/admin/categories/${id}`, {
+            method: 'DELETE',
+        }),
+
         getOrders: () => api.request('/admin/orders'),
+
+        getOrderDetail: (id) => api.request(`/admin/orders/${id}`),
 
         updateOrderStatus: (orderId, status) => api.request(`/admin/orders/${orderId}/status`, {
             method: 'PATCH',
@@ -149,4 +193,66 @@ const api = {
 
         getUsers: () => api.request('/admin/users'),
     },
+
+    // Secretary
+    secretary: {
+        getDashboard: () => api.request('/secretary/dashboard'),
+        getPendingTransfers: () => api.request('/secretary/pending-transfers'),
+        approvePayment: (orderId) => api.request(`/secretary/approve-payment/${orderId}`, { method: 'POST' }),
+        assignDelivery: (orderId, deliveryManId) => api.request(`/secretary/assign-delivery/${orderId}`, {
+            method: 'POST',
+            body: JSON.stringify({ deliveryManId }),
+        }),
+        getDeliveryMen: () => api.request('/secretary/delivery-men'),
+        getBankAccounts: () => api.request('/secretary/bank-accounts'),
+        getNotifications: () => api.request('/admin/notifications'),
+        markNotificationRead: (id) => api.request(`/admin/notifications/${id}/read`, { method: 'POST' }),
+        markAllRead: () => api.request('/admin/notifications/read-all', { method: 'POST' }),
+    },
+
+    // Delivery Man
+    delivery: {
+        getOrders: () => api.request('/delivery/orders'),
+        updateLocation: (orderId, latitude, longitude) => api.request('/delivery/location', {
+            method: 'POST',
+            body: JSON.stringify({ orderId, latitude, longitude }),
+        }),
+        getLocation: (orderId) => api.request(`/delivery/location/${orderId}`),
+        updateOrderStatus: (orderId, status) => api.request(`/delivery/orders/${orderId}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status }),
+        }),
+    },
+
+    // Tracking (public)
+    getTracking: (trackingId) => api.request(`/tracking/${trackingId}`),
+
+    // Receipt Upload
+    uploadReceipt: (orderId, file) => {
+        const formData = new FormData();
+        formData.append('receipt', file);
+        return api.request(`/orders/${orderId}/upload-receipt`, {
+            method: 'POST',
+            body: formData,
+        });
+    },
+
+    getOrderReceipt: (orderId) => {
+        const token = api.getToken();
+        return fetch(`${API_BASE}/orders/${orderId}/receipt`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+    },
+
+    getScanResults: (orderId) => api.request(`/orders/${orderId}/scan-results`),
 };
+
+// Admin extensions
+api.admin.createStaff = (data) => api.request('/admin/staff', { method: 'POST', body: JSON.stringify(data) });
+api.admin.deleteStaff = (userId) => api.request(`/admin/staff/${userId}`, { method: 'DELETE' });
+api.admin.getStaff = () => api.request('/admin/staff');
+api.admin.changeRole = (userId, role) => api.request(`/admin/users/${userId}/role`, { method: 'PATCH', body: JSON.stringify({ role }) });
+api.admin.getBankAccounts = () => api.request('/admin/bank-accounts');
+api.admin.createBankAccount = (data) => api.request('/admin/bank-accounts', { method: 'POST', body: JSON.stringify(data) });
+api.admin.updateBankAccount = (id, data) => api.request(`/admin/bank-accounts/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+api.admin.deleteBankAccount = (id) => api.request(`/admin/bank-accounts/${id}`, { method: 'DELETE' });

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - GREAT WALL intl</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .success-icon { width: 80px; height: 80px; border-radius: 50%; background: #d1e7dd; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+        .success-icon i { font-size: 2.5rem; color: #198754; }
+        .status-card { border: 2px solid #198754; border-radius: 16px; }
+        .loading-spinner { width: 48px; height: 48px; border: 4px solid #e9ecef; border-top-color: #198754; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white" style="box-shadow:var(--shadow)">
+    <div class="container">
+        <a class="navbar-brand" href="index.html"><img src="images/logo.svg" alt="GREAT WALL intl" height="36"></a>
+        <div class="nav-icons d-flex align-items-center gap-2">
+            <a href="index.html" class="btn btn-outline-primary btn-sm rounded-pill px-3">Back to Store</a>
+        </div>
+    </div>
+</nav>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="text-center mb-4" id="verifyingSection">
+                    <div class="loading-spinner mb-3"></div>
+                    <h4 class="fw-bold">Verifying your payment...</h4>
+                    <p class="text-muted">Please wait while our server confirms your payment.</p>
+                </div>
+
+                <div class="status-card card border-0 shadow-sm p-5 text-center" id="successSection" style="display:none">
+                    <div class="success-icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h2 class="fw-bold text-success mb-2">Payment Successful!</h2>
+                    <p class="text-muted mb-4">Your order has been placed and payment confirmed.</p>
+
+                    <div class="bg-light rounded p-4 mb-4 text-start">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Order Number</span>
+                            <strong id="successOrderNumber">-</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Amount Paid</span>
+                            <strong id="successAmount">-</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Payment Reference</span>
+                            <strong id="successReference" class="small text-break">-</strong>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 justify-content-center">
+                        <a href="order-history.html" class="btn btn-primary px-4">
+                            <i class="fas fa-box me-2"></i>View My Orders
+                        </a>
+                        <a href="shop.html" class="btn btn-outline-secondary px-4">
+                            <i class="fas fa-shopping-bag me-2"></i>Continue Shopping
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm p-5 text-center" id="errorSection" style="display:none">
+                    <div style="width:80px;height:80px;border-radius:50%;background:#f8d7da;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size:2.5rem;color:#dc3545;"></i>
+                    </div>
+                    <h3 class="fw-bold text-danger mb-2">Verification Failed</h3>
+                    <p class="text-muted mb-4" id="errorMessage">We could not verify your payment.</p>
+                    <a href="payment-failed.html" id="failLink" class="btn btn-outline-danger me-2">Payment Failed Page</a>
+                    <a href="checkout.html" class="btn btn-primary">Try Again</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="js/api.js"></script>
+<script src="js/cart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    var params = new URLSearchParams(window.location.search);
+    var ref = params.get('reference') || params.get('trxref');
+
+    if (!ref) {
+        var pending = sessionStorage.getItem('pendingPayment');
+        if (pending) {
+            try {
+                ref = JSON.parse(pending).reference;
+            } catch (e) {}
+        }
+    }
+
+    if (!ref) {
+        document.getElementById('verifyingSection').style.display = 'none';
+        document.getElementById('errorSection').style.display = 'block';
+        document.getElementById('errorMessage').textContent = 'No payment reference found.';
+        return;
+    }
+
+    document.getElementById('failLink').href = 'payment-failed.html?reference=' + encodeURIComponent(ref);
+
+    try {
+        var result = await api.verifyPayment(ref);
+
+        if (result.status === 'success') {
+            if (typeof cartManager !== 'undefined') {
+                cartManager.clearCart();
+            }
+            sessionStorage.removeItem('pendingPayment');
+
+            document.getElementById('verifyingSection').style.display = 'none';
+            document.getElementById('successSection').style.display = 'block';
+            document.getElementById('successOrderNumber').textContent = result.orderNumber || '-';
+            document.getElementById('successAmount').textContent = '₦' + Number(result.amount || 0).toLocaleString('en-NG', { minimumFractionDigits: 2 });
+            document.getElementById('successReference').textContent = ref;
+        } else {
+            window.location.href = 'payment-failed.html?reference=' + encodeURIComponent(ref) + '&message=' + encodeURIComponent(result.message || 'Payment not successful');
+        }
+    } catch (error) {
+        document.getElementById('verifyingSection').style.display = 'none';
+        document.getElementById('errorSection').style.display = 'block';
+        document.getElementById('errorMessage').textContent =
+            (error.message || 'Verification failed.') + ' Reference: ' + ref;
+    }
+});
+</script>
+</body>
+</html>

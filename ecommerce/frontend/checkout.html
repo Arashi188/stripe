@@ -3,88 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout - ShopPremium</title>
+    <title>Checkout - GREAT WALL intl</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        .checkout-step { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-radius: 12px; background: #f8f9fa; margin-bottom: 1rem; }
+        .checkout-step .step-number { width: 36px; height: 36px; border-radius: 50%; background: #0d6efd; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .9rem; flex-shrink: 0; }
+        .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+        .loading-overlay .spinner { width: 48px; height: 48px; border: 4px solid #e9ecef; border-top-color: #0d6efd; border-radius: 50%; animation: spin .8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .payment-option { border: 2px solid #dee2e6; border-radius: 12px; padding: 1rem; cursor: pointer; transition: all .2s; }
+        .payment-option:hover { border-color: #0d6efd; }
+        .payment-option.selected { border-color: #0d6efd; background: #f0f6ff; }
+        .payment-option input[type="radio"] { display: none; }
+        .bank-details { background: #f8f9fa; border-radius: 8px; padding: 1rem; margin-top: 1rem; }
+        .bank-details .detail-row { display: flex; justify-content: space-between; padding: .4rem 0; border-bottom: 1px dashed #dee2e6; }
+        .bank-details .detail-row:last-child { border-bottom: none; }
+        .bank-details .label { color: #6c757d; font-weight: 500; }
+        .bank-details .value { font-weight: 600; font-family: monospace; }
+        .cart-summary { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.06); padding: 1.5rem; position: sticky; top: 90px; }
+        .summary-row { display: flex; justify-content: space-between; padding: .35rem 0; color: #6c757d; }
+        .summary-total { font-size: 1.25rem; font-weight: 700; margin-top: .75rem; padding-top: .75rem; border-top: 2px solid #e9ecef; }
+        .qty-badge { background: #e7f1ff; color: #0d6efd; font-size: .75rem; padding: .15rem .5rem; border-radius: 20px; }
+    </style>
 </head>
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white" style="box-shadow:var(--shadow)">
     <div class="container">
-        <a class="navbar-brand" href="index.html">Shop<span>Premium</span></a>
+        <a class="navbar-brand" href="index.html"><img src="images/logo.svg" alt="GREAT WALL intl" height="36"></a>
         <div class="nav-icons d-flex align-items-center gap-2">
             <a href="cart.html" class="btn"><i class="fas fa-shopping-bag"></i><span class="cart-count">0</span></a>
         </div>
     </div>
 </nav>
 
-<section class="checkout-section py-5">
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+    <div class="spinner mb-3"></div>
+    <h5 class="fw-bold" id="loadingText">Placing your order...</h5>
+    <p class="text-muted mb-0">Please wait — do not close this page</p>
+</div>
+
+<section class="checkout-section py-5 mt-4">
     <div class="container">
         <div class="text-center mb-5">
             <h2 class="fw-bold">Checkout</h2>
-            <p class="text-muted">Complete your order with secure payment</p>
+            <p class="text-muted">Complete your order with cash on delivery or bank transfer</p>
         </div>
+
         <div id="checkoutContent">
-            <div class="row g-5">
+            <div class="row g-4 g-lg-5">
                 <div class="col-lg-7">
+                    <div class="card border-0 shadow-sm p-4 mb-4">
+                        <div class="checkout-step">
+                            <div class="step-number">1</div>
+                            <div>
+                                <strong>Shipping Information</strong>
+                                <p class="mb-0 text-muted small">Where should we deliver your order?</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="shippingName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="shippingEmail" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Street Address *</label>
+                                <input type="text" class="form-control" id="shippingAddress" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">City *</label>
+                                <input type="text" class="form-control" id="shippingCity" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">State *</label>
+                                <input type="text" class="form-control" id="shippingState" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">ZIP / Postal Code</label>
+                                <input type="text" class="form-control" id="shippingZip">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Country *</label>
+                                <input type="text" class="form-control" id="shippingCountry" value="Nigeria" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Phone *</label>
+                                <input type="tel" class="form-control" id="shippingPhone" placeholder="+234..." required>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card border-0 shadow-sm p-4">
-                        <h4 class="fw-bold mb-4">Shipping Information</h4>
-                        <form id="checkoutForm">
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label class="form-label">Full Name</label>
-                                    <input type="text" class="form-control" id="shippingName" required>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Address</label>
-                                    <input type="text" class="form-control" id="shippingAddress" placeholder="Street address" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">City</label>
-                                    <input type="text" class="form-control" id="shippingCity" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">State</label>
-                                    <input type="text" class="form-control" id="shippingState" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">ZIP Code</label>
-                                    <input type="text" class="form-control" id="shippingZip" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Country</label>
-                                    <input type="text" class="form-control" id="shippingCountry" value="United States" required>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Phone</label>
-                                    <input type="tel" class="form-control" id="shippingPhone">
+                        <div class="checkout-step">
+                            <div class="step-number">2</div>
+                            <div>
+                                <strong>Payment Method</strong>
+                                <p class="mb-0 text-muted small">Choose how you want to pay</p>
+                            </div>
+                        </div>
+
+                        <div id="paymentOptions">
+                            <div class="payment-option selected mb-2" data-method="cod" onclick="selectPayment('cod')">
+                                <div class="d-flex align-items-center gap-3">
+                                    <input type="radio" name="paymentMethod" value="cod" checked id="payCod">
+                                    <i class="fas fa-money-bill-wave fs-4 text-success"></i>
+                                    <div>
+                                        <strong class="d-block">Cash on Delivery</strong>
+                                        <small class="text-muted">Pay when you receive your order</small>
+                                    </div>
                                 </div>
                             </div>
-                            <hr class="my-4">
-                            <h4 class="fw-bold mb-4">Payment</h4>
-                            <p class="text-muted small">Your payment will be processed securely via Stripe.</p>
-                            <div id="cardElement" class="p-3 border rounded mb-3">
-                                <p class="text-muted mb-0"><i class="fas fa-lock me-2"></i>Secure payment processing</p>
+                            <div class="payment-option mb-2" data-method="transfer" onclick="selectPayment('transfer')">
+                                <div class="d-flex align-items-center gap-3">
+                                    <input type="radio" name="paymentMethod" value="transfer" id="payTransfer">
+                                    <i class="fas fa-university fs-4 text-primary"></i>
+                                    <div>
+                                        <strong class="d-block">Bank Transfer</strong>
+                                        <small class="text-muted">Transfer to our account — we confirm once received</small>
+                                    </div>
+                                </div>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
-                                <i class="fas fa-lock me-2"></i>Place Order & Pay
-                            </button>
-                        </form>
+                        </div>
+
+                        <div id="transferBankDetails" class="bank-details" style="display:none">
+                            <h6 class="fw-bold mb-3"><i class="fas fa-university me-2"></i>Bank Account Details</h6>
+                            <p class="text-muted small">Transfer the exact order total to any account below:</p>
+                            <div id="bankAccountsList"></div>
+                            <hr>
+                            <h6 class="fw-bold mb-3"><i class="fas fa-upload me-2"></i>Upload Payment Receipt</h6>
+                            <p class="text-muted small">Upload your payment receipt (JPG, PNG or PDF — max 5MB)</p>
+                            <input type="file" class="form-control" id="receiptFile" accept=".jpg,.jpeg,.png,.pdf">
+                            <div id="receiptFileName" class="small text-success mt-1" style="display:none"></div>
+                            <hr>
+                            <div class="alert alert-warning small mb-0">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                After payment, upload your receipt. Our team will confirm your order and you will be notified when it is approved.
+                            </div>
+                        </div>
+
+                        <div class="alert alert-danger d-flex align-items-center gap-2 mt-3" id="errorAlert" style="display:none">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span id="errorMessage"></span>
+                        </div>
+
+                        <button type="button" class="btn btn-primary btn-lg w-100 mt-3" id="checkoutBtn">
+                            <i class="fas fa-check me-2"></i>Place Order — <span id="payAmount">₦0.00</span>
+                        </button>
+
+                        <p class="text-center text-muted small mt-3 mb-0">
+                            <i class="fas fa-lock me-1"></i>You must be signed in to place an order
+                        </p>
                     </div>
                 </div>
+
                 <div class="col-lg-5">
                     <div class="cart-summary">
-                        <h5>Order Summary</h5>
+                        <h5 class="fw-bold mb-3">Order Summary</h5>
                         <div id="checkoutItems"></div>
                         <hr>
                         <div class="summary-row"><span>Subtotal</span><span id="checkoutSubtotal">₦0.00</span></div>
                         <div class="summary-row"><span>Shipping</span><span id="checkoutShipping">₦0.00</span></div>
-                        <div class="summary-row"><span>Tax</span><span id="checkoutTax">₦0.00</span></div>
+                        <div class="summary-row"><span>Tax (8%)</span><span id="checkoutTax">₦0.00</span></div>
                         <div class="summary-total d-flex justify-content-between">
                             <span>Total</span>
-                            <span id="checkoutTotal">₦0.00</span>
+                            <span class="text-primary" id="checkoutTotal">₦0.00</span>
                         </div>
                     </div>
                 </div>
@@ -94,10 +185,229 @@
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://js.stripe.com/v3/"></script>
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/main.js"></script>
+<script>
+var selectedMethod = 'cod';
+var bankAccounts = [];
+
+function escapeHtml(str) {
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(str));
+    return d.innerHTML;
+}
+
+function selectPayment(method) {
+    selectedMethod = method;
+    document.querySelectorAll('.payment-option').forEach(function(el) {
+        el.classList.toggle('selected', el.dataset.method === method);
+    });
+    document.getElementById('transferBankDetails').style.display = method === 'transfer' ? 'block' : 'none';
+}
+
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.id === 'receiptFile') {
+        var nameEl = document.getElementById('receiptFileName');
+        if (e.target.files && e.target.files[0]) {
+            nameEl.textContent = 'Selected: ' + e.target.files[0].name;
+            nameEl.style.display = 'block';
+        } else {
+            nameEl.style.display = 'none';
+        }
+    }
+});
+
+function showError(msg) {
+    document.getElementById('errorMessage').textContent = msg;
+    document.getElementById('errorAlert').style.display = 'flex';
+}
+
+function hideError() {
+    document.getElementById('errorAlert').style.display = 'none';
+}
+
+function setVal(id, val) {
+    var el = document.getElementById(id);
+    if (el && val) el.value = val;
+}
+
+function loadBankAccounts() {
+    api.request('/secretary/bank-accounts').then(function(accounts) {
+        bankAccounts = accounts;
+        var html = '';
+        accounts.forEach(function(acct) {
+            html += '<div class="detail-row"><span class="label">Bank</span><span class="value">' + escapeHtml(acct.bankName) + '</span></div>' +
+                '<div class="detail-row"><span class="label">Account Name</span><span class="value">' + escapeHtml(acct.accountName) + '</span></div>' +
+                '<div class="detail-row"><span class="label">Account Number</span><span class="value">' + escapeHtml(acct.accountNumber) + '</span></div>' +
+                '<hr>';
+        });
+        document.getElementById('bankAccountsList').innerHTML = html || '<p class="text-muted">Bank details will be provided via email.</p>';
+    }).catch(function() {
+        document.getElementById('bankAccountsList').innerHTML = '<p class="text-muted">Unable to load bank details. Contact support for payment info.</p>';
+    });
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+    if (typeof auth !== 'undefined') {
+        if (!auth.isLoggedIn()) {
+            auth.redirectToLogin();
+            return;
+        }
+    }
+
+    var cart;
+    try {
+        cart = cartManager.getCart();
+    } catch (e) {
+        document.getElementById('checkoutContent').innerHTML =
+            '<div class="alert alert-danger">Cart failed to load. <a href="cart.html">Return to cart</a></div>';
+        return;
+    }
+
+    var content = document.getElementById('checkoutContent');
+    var btn = document.getElementById('checkoutBtn');
+
+    if (!cart || cart.length === 0) {
+        content.innerHTML =
+            '<div class="empty-state text-center py-5">' +
+            '<div class="display-4 mb-3">🛒</div>' +
+            '<h4>Your cart is empty</h4>' +
+            '<p class="text-muted">Add items before checking out.</p>' +
+            '<a href="shop.html" class="btn btn-primary mt-3">Continue Shopping</a></div>';
+        return;
+    }
+
+    if (typeof auth !== 'undefined' && auth.isLoggedIn()) {
+        try {
+            var profile = await api.getProfile();
+            setVal('shippingName', profile.fullName);
+            setVal('shippingEmail', profile.email);
+            setVal('shippingPhone', profile.phone);
+            setVal('shippingAddress', profile.address);
+            setVal('shippingCity', profile.city);
+            setVal('shippingState', profile.state);
+            setVal('shippingZip', profile.zipCode);
+            setVal('shippingCountry', profile.country || 'Nigeria');
+        } catch (e) {
+            var cached = auth.getUser();
+            if (cached) {
+                setVal('shippingName', cached.fullName);
+                setVal('shippingEmail', cached.email);
+            }
+        }
+    }
+
+    var subtotal = cartManager.getTotal();
+    var shipping = subtotal > 100 ? 0 : 10;
+    var tax = subtotal * 0.08;
+    var total = subtotal + shipping + tax;
+
+    document.getElementById('checkoutItems').innerHTML = cart.map(function(item) {
+        var imgSrc = (typeof resolveImageUrl === 'function' ? resolveImageUrl(item.image) : item.image) || 'https://via.placeholder.com/60';
+        return '<div class="d-flex align-items-center mb-3 pb-3 border-bottom">' +
+            '<img src="' + imgSrc + '" width="64" height="64" style="object-fit:cover;border-radius:10px" alt="">' +
+            '<div class="ms-3 flex-grow-1">' +
+            '<strong class="d-block">' + escapeHtml(item.name) + '</strong>' +
+            '<span class="qty-badge">Qty: ' + item.quantity + '</span>' +
+            '</div>' +
+            '<div class="fw-bold">₦' + (item.price * item.quantity).toFixed(2) + '</div>' +
+            '</div>';
+    }).join('');
+
+    document.getElementById('checkoutSubtotal').textContent = '₦' + subtotal.toFixed(2);
+    document.getElementById('checkoutShipping').textContent = shipping === 0 ? 'Free' : '₦' + shipping.toFixed(2);
+    document.getElementById('checkoutTax').textContent = '₦' + tax.toFixed(2);
+    document.getElementById('checkoutTotal').textContent = '₦' + total.toFixed(2);
+    document.getElementById('payAmount').textContent = '₦' + total.toFixed(2);
+
+    loadBankAccounts();
+
+    btn.addEventListener('click', async function() {
+        if (btn.disabled) return;
+        hideError();
+
+        var name = document.getElementById('shippingName').value.trim();
+        var email = document.getElementById('shippingEmail').value.trim();
+        var address = document.getElementById('shippingAddress').value.trim();
+        var city = document.getElementById('shippingCity').value.trim();
+        var state = document.getElementById('shippingState').value.trim();
+        var country = document.getElementById('shippingCountry').value.trim();
+        var phone = document.getElementById('shippingPhone').value.trim();
+
+        if (!name || !email || !address || !city || !state || !country || !phone) {
+            showError('Please fill in all required fields.');
+            return;
+        }
+
+        if (!auth.isLoggedIn()) {
+            auth.redirectToLogin();
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Placing order...';
+        document.getElementById('loadingOverlay').style.display = 'flex';
+
+        try {
+            var orderData = {
+                items: cart.map(function(item) {
+                    return { productId: item.productId, quantity: item.quantity };
+                }),
+                paymentMethod: selectedMethod,
+                shippingAddress: address,
+                shippingCity: city,
+                shippingState: state,
+                shippingZipCode: document.getElementById('shippingZip').value.trim(),
+                shippingCountry: country,
+                shippingPhone: phone,
+            };
+
+            var result = await api.createOrder(orderData);
+            cartManager.clearCart();
+
+            if (result.paymentMethod === 'transfer') {
+                var receiptInput = document.getElementById('receiptFile');
+                if (!receiptInput.files || !receiptInput.files[0]) {
+                    showError('Please upload your payment receipt for bank transfer orders.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check me-2"></i>Place Order — ₦' + total.toFixed(2);
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    return;
+                }
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading receipt...';
+                await api.uploadReceipt(result.id, receiptInput.files[0]);
+            }
+
+            var params = new URLSearchParams({
+                orderNumber: result.orderNumber,
+                orderId: result.id,
+                total: result.totalAmount.toFixed(2),
+                paymentMethod: result.paymentMethod,
+                paymentStatus: result.paymentStatus,
+                trackingId: result.trackingId || '',
+            });
+
+            if (result.paymentMethod === 'transfer') {
+                params.set('accounts', JSON.stringify(bankAccounts));
+            }
+
+            window.location.href = 'order-confirmation.html?' + params.toString();
+        } catch (error) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check me-2"></i>Place Order — ₦' + total.toFixed(2);
+            document.getElementById('loadingOverlay').style.display = 'none';
+            if (error.message && (error.message.indexOf('401') !== -1 || /login|sign in/i.test(error.message))) {
+                showError('Please sign in to place your order.');
+                setTimeout(function() { auth.redirectToLogin(); }, 1500);
+            } else {
+                showError(error.message || 'Could not place order. Please try again.');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
+});
+</script>
 </body>
 </html>

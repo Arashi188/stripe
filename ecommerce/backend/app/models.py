@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import uuid
 from app import db
 
 
@@ -15,14 +16,17 @@ class User(db.Model):
     state = db.Column(db.String(100))
     zip_code = db.Column(db.String(20))
     country = db.Column(db.String(100))
-    role = db.Column(db.String(10), default='USER')
+    role = db.Column(db.String(20), default='USER')
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    orders = db.relationship('Order', backref='user', lazy=True)
+    orders = db.relationship('Order', backref='user', lazy=True, foreign_keys='Order.user_id')
     cart_items = db.relationship('Cart', backref='user', lazy=True)
     wishlist_items = db.relationship('Wishlist', backref='user', lazy=True)
     reviews = db.relationship('Review', backref='user', lazy=True)
+    notifications = db.relationship('Notification', backref='user', lazy=True)
+    delivery_orders = db.relationship('Order', backref='delivery_man', lazy=True,
+                                       foreign_keys='Order.delivery_man_id')
 
 
 class Category(db.Model):
@@ -66,6 +70,15 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     order_number = db.Column(db.String(50), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    customer_name = db.Column(db.String(100))
+    customer_email = db.Column(db.String(120))
+
+    tracking_id = db.Column(db.String(20), unique=True)
+    delivery_man_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    payment_method = db.Column(db.String(20), default='cod')
+    receipt_url = db.Column(db.String(500), nullable=True)
+    receipt_scan_status = db.Column(db.String(20), nullable=True)
+    receipt_scan_details = db.Column(db.Text, nullable=True)
 
     shipping_address = db.Column(db.String(255))
     shipping_city = db.Column(db.String(100))
@@ -90,6 +103,10 @@ class Order(db.Model):
 
     order_items = db.relationship('OrderItem', backref='order', lazy=True, cascade='all, delete-orphan')
     payment = db.relationship('Payment', backref='order', uselist=False, cascade='all, delete-orphan')
+    delivery_locations = db.relationship('DeliveryLocation', backref='order', lazy=True, cascade='all, delete-orphan')
+
+    def generate_tracking_id(self):
+        self.tracking_id = 'TRK-' + uuid.uuid4().hex[:8].upper()
 
 
 class OrderItem(db.Model):
@@ -112,10 +129,10 @@ class Payment(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
-    stripe_payment_intent_id = db.Column(db.String(100))
-    stripe_client_secret = db.Column(db.String(500))
+    gateway = db.Column(db.String(20), default='cod')
+    payment_method = db.Column(db.String(30), default='cod')
     amount = db.Column(db.Float)
-    currency = db.Column(db.String(3), default='usd')
+    currency = db.Column(db.String(3), default='ngn')
     status = db.Column(db.String(20), default='PENDING')
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -155,3 +172,41 @@ class Review(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     product = db.relationship('Product', lazy=True)
+
+
+class DeliveryLocation(db.Model):
+    __tablename__ = 'delivery_locations'
+
+    id = db.Column(db.Integer, primary_key=True)
+    delivery_man_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    delivery_man = db.relationship('User', lazy=True)
+
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=True)
+    message = db.Column(db.String(500), nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    is_urgent = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    order = db.relationship('Order', lazy=True)
+
+
+class BankAccount(db.Model):
+    __tablename__ = 'bank_accounts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    bank_name = db.Column(db.String(100), nullable=False)
+    account_number = db.Column(db.String(20), nullable=False)
+    account_name = db.Column(db.String(100), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))

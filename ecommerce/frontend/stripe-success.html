@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - GREAT WALL intl</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .success-check { width: 64px; height: 64px; border-radius: 50%; background: #d1e7dd; color: #198754; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto; }
+        .detail-row { display: flex; justify-content: space-between; padding: .6rem 0; border-bottom: 1px solid #f0f0f0; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-row .label { color: #6c757d; }
+        .detail-row .value { font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white" style="box-shadow:var(--shadow)">
+    <div class="container">
+        <a class="navbar-brand" href="index.html"><img src="images/logo.svg" alt="GREAT WALL intl" height="36"></a>
+        <div class="nav-icons d-flex align-items-center gap-2">
+            <a href="cart.html" class="btn"><i class="fas fa-shopping-bag"></i><span class="cart-count">0</span></a>
+        </div>
+    </div>
+</nav>
+
+<section class="py-5 mt-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm p-4 text-center">
+                    <div class="success-check mb-3"><i class="fas fa-check"></i></div>
+                    <h3 class="fw-bold">Payment Successful!</h3>
+                    <p class="text-muted" id="statusText">Verifying your payment...</p>
+
+                    <div class="text-start border rounded p-3 mt-3 bg-light" id="orderDetails" style="display:none">
+                        <div class="detail-row"><span class="label">Order Number</span><span class="value" id="dispOrderNumber">—</span></div>
+                        <div class="detail-row"><span class="label">Total Amount</span><span class="value" id="dispTotal">—</span></div>
+                        <div class="detail-row"><span class="label">Payment Status</span><span class="value" id="dispStatus">—</span></div>
+                        <div class="detail-row"><span class="label">Email</span><span class="value" id="dispEmail">—</span></div>
+                    </div>
+
+                    <div id="trackingSection" style="display:none" class="mt-3 text-start">
+                        <div class="alert alert-success">
+                            <i class="fas fa-truck me-1"></i>
+                            <strong>Your order is being prepared!</strong><br>
+                            Track your delivery in real-time.
+                        </div>
+                        <a href="" id="trackNowLink" class="btn btn-success w-100">
+                            <i class="fas fa-map-marked-alt me-2"></i>Track Your Order Now
+                        </a>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="order-history.html" class="btn btn-outline-primary me-2">View Orders</a>
+                        <a href="shop.html" class="btn btn-primary">Continue Shopping</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    if (typeof auth !== 'undefined' && !auth.isLoggedIn()) {
+        auth.redirectToLogin();
+        return;
+    }
+
+    var params = new URLSearchParams(window.location.search);
+    var sessionId = params.get('session_id');
+    if (!sessionId) {
+        document.getElementById('statusText').textContent = 'No session information found.';
+        return;
+    }
+
+    try {
+        var result = await api.getSessionStatus(sessionId);
+        document.getElementById('orderDetails').style.display = 'block';
+        document.getElementById('dispOrderNumber').textContent = result.orderNumber || '—';
+        var amt = result.amount != null ? Number(result.amount).toFixed(2) : '0.00';
+        document.getElementById('dispTotal').textContent = '\u20A6' + amt;
+
+        if (result.paymentStatus === 'paid') {
+            document.getElementById('statusText').textContent = 'Your payment has been confirmed. Thank you!';
+            document.getElementById('dispStatus').textContent = 'Paid';
+            document.getElementById('dispStatus').className = 'value text-success fw-bold';
+            document.getElementById('dispEmail').textContent = result.customerEmail || '—';
+
+            // Poll backend for tracking ID (webhook may not have fired yet)
+            try {
+                var order = await api.getOrder(result.orderId);
+                if (order.trackingId) {
+                    document.getElementById('trackingSection').style.display = 'block';
+                    document.getElementById('trackNowLink').href = 'tracking.html?id=' + encodeURIComponent(order.trackingId);
+                } else {
+                    setTimeout(async function() {
+                        try {
+                            var order2 = await api.getOrder(result.orderId);
+                            if (order2.trackingId) {
+                                document.getElementById('trackingSection').style.display = 'block';
+                                document.getElementById('trackNowLink').href = 'tracking.html?id=' + encodeURIComponent(order2.trackingId);
+                            }
+                        } catch (e) {}
+                    }, 3000);
+                }
+            } catch (e) {}
+        } else if (result.status === 'complete') {
+            document.getElementById('statusText').textContent = 'Payment received! Your order is being processed.';
+            document.getElementById('dispStatus').textContent = 'Processing';
+            document.getElementById('dispEmail').textContent = result.customerEmail || '—';
+        } else {
+            document.getElementById('statusText').textContent = 'Payment is pending. We will notify you once confirmed.';
+            document.getElementById('dispStatus').textContent = result.paymentStatus || 'Pending';
+        }
+    } catch (e) {
+        document.getElementById('statusText').textContent = 'Could not verify payment status. Please check your order history.';
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Failed - GREAT WALL intl</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .fail-icon { width: 80px; height: 80px; border-radius: 50%; background: #f8d7da; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+        .fail-icon i { font-size: 2.5rem; color: #dc3545; }
+        .help-card { background: #fff3cd; border: 1px solid #ffc107; border-radius: 12px; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white" style="box-shadow:var(--shadow)">
+    <div class="container">
+        <a class="navbar-brand" href="index.html"><img src="images/logo.svg" alt="GREAT WALL intl" height="36"></a>
+        <a href="index.html" class="btn btn-outline-primary btn-sm rounded-pill px-3">Back to Store</a>
+    </div>
+</nav>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm p-5 text-center">
+                    <div class="fail-icon">
+                        <i class="fas fa-times"></i>
+                    </div>
+                    <h2 class="fw-bold text-danger mb-2">Payment Failed</h2>
+                    <p class="text-muted mb-4">Your payment was not completed. Your cart has been kept so you can try again.</p>
+
+                    <div id="failureDetails" class="bg-light rounded p-4 mb-4 text-start" style="display:none">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Reference</span>
+                            <strong id="failReference" class="small text-break">-</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Details</span>
+                            <strong id="failMessage" class="small text-end">-</strong>
+                        </div>
+                    </div>
+
+                    <div class="help-card p-4 mb-4 text-start">
+                        <h6 class="fw-bold"><i class="fas fa-lightbulb me-2 text-warning"></i>What can you do?</h6>
+                        <ul class="mb-0 small">
+                            <li>Check your card or bank balance and try again</li>
+                            <li>Use a different card or payment method</li>
+                            <li>Contact your bank if the charge was declined</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 justify-content-center">
+                        <a href="checkout.html" class="btn btn-primary px-4">
+                            <i class="fas fa-redo me-2"></i>Try Again
+                        </a>
+                        <a href="cart.html" class="btn btn-outline-secondary px-4">
+                            <i class="fas fa-shopping-cart me-2"></i>Back to Cart
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var params = new URLSearchParams(window.location.search);
+    var ref = params.get('reference') || params.get('trxref');
+    var message = params.get('message');
+
+    if (ref || message) {
+        document.getElementById('failureDetails').style.display = 'block';
+        if (ref) document.getElementById('failReference').textContent = ref;
+        if (message) document.getElementById('failMessage').textContent = decodeURIComponent(message);
+    }
+
+    sessionStorage.removeItem('pendingPayment');
+});
+</script>
+</body>
+</html>

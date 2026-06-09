@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Order - GREAT WALL intl</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        #map { height: 450px; border-radius: 12px; }
+        .timeline { position: relative; padding-left: 2rem; }
+        .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: #dee2e6; }
+        .timeline-item { position: relative; padding-bottom: 1.5rem; }
+        .timeline-item .dot { position: absolute; left: -1.65rem; top: 4px; width: 18px; height: 18px; border-radius: 50%; background: #dee2e6; border: 3px solid #fff; }
+        .timeline-item.completed .dot { background: #198754; }
+        .timeline-item.active .dot { background: #0d6efd; box-shadow: 0 0 0 4px rgba(13,110,253,.2); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 4px rgba(13,110,253,.2); } 50% { box-shadow: 0 0 0 8px rgba(13,110,253,.1); } 100% { box-shadow: 0 0 0 4px rgba(13,110,253,.2); } }
+        .saved-tracking { cursor: pointer; transition: all .2s; }
+        .saved-tracking:hover { background: #f0f4ff; border-color: #0d6efd; }
+        .status-pill { font-size: .85rem; padding: 4px 14px; border-radius: 20px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white" style="box-shadow:var(--shadow)">
+    <div class="container">
+        <a class="navbar-brand" href="index.html"><img src="images/logo.svg" alt="GREAT WALL intl" height="36"></a>
+        <button class="navbar-toggler border-0" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="shop.html">Shop</a></li>
+            </ul>
+            <div class="nav-icons d-flex align-items-center gap-2">
+                <a href="cart.html" class="btn"><i class="fas fa-shopping-bag"></i><span class="cart-count">0</span></a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<section class="dashboard-section py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold">Track Your Order</h2>
+                    <p class="text-muted">Enter your Tracking ID below to see delivery status</p>
+                </div>
+
+                <div class="card border-0 shadow-sm p-4 mb-4">
+                    <form id="trackForm" onsubmit="return false">
+                        <div class="input-group input-group-lg">
+                            <input type="text" class="form-control" id="trackingInput" placeholder="TRK-XXXXXXXX" style="text-transform:uppercase">
+                            <button class="btn btn-primary" type="submit" id="trackBtn"><i class="fas fa-search me-2"></i>Track</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="trackingResult" style="display:none">
+                    <div class="card border-0 shadow-sm p-4 mb-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h4 class="fw-bold mb-1">Order #<span id="trackOrderNumber"></span></h4>
+                                <p class="text-muted mb-0" id="trackCustomerName"></p>
+                            </div>
+                            <div>
+                                <span class="status-pill" id="trackStatusPill"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Payment</small>
+                                <strong id="trackPaymentMethod"></strong>
+                                <span id="trackPaymentStatus"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Total</small>
+                                <strong id="trackTotalAmount"></strong>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted d-block">Shipping Address</small>
+                                <span id="trackAddress"></span>
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold mb-3">Order Timeline</h6>
+                        <div class="timeline" id="trackTimeline"></div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm p-4">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-map-marked-alt me-2"></i>Delivery Location</h5>
+                        <div id="map"><div class="text-center text-muted py-5"><i class="fas fa-spinner fa-spin fa-2x mb-2 d-block"></i>Loading map...</div></div>
+                        <div class="mt-2 d-flex justify-content-between align-items-center">
+                            <small class="text-muted" id="lastUpdated">Waiting for location data...</small>
+                            <small class="text-muted" id="deliveryManName"></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="trackingError" style="display:none" class="alert alert-danger text-center"></div>
+                <div id="trackingEmpty" class="text-center text-muted py-5">
+                    <i class="fas fa-map-marker-alt fa-3x mb-3 d-block" style="color:#dee2e6"></i>
+                    <h5>Enter a Tracking ID</h5>
+                    <p>Your tracking ID was provided after placing your order.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-history me-2"></i>Saved Tracking IDs</h5>
+                    </div>
+                    <div class="card-body" id="savedTrackingList">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-tag fa-2x mb-2 d-block"></i>
+                            <small>No saved tracking IDs</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/main.js"></script>
+
+<script>
+var pollInterval = null;
+
+function loadSavedTracking() {
+    var stored = JSON.parse(localStorage.getItem('trackingIds') || '[]');
+    var container = document.getElementById('savedTrackingList');
+    if (stored.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-tag fa-2x mb-2 d-block"></i><small>No saved tracking IDs</small></div>';
+        return;
+    }
+    container.innerHTML = stored.map(function(s) {
+        var date = new Date(s.date);
+        return '<div class="saved-tracking card border mb-2 p-2" onclick="trackOrder(\'' + s.trackingId + '\')">' +
+            '<div class="d-flex justify-content-between align-items-center">' +
+            '<div><strong class="small">' + s.trackingId + '</strong><br><small class="text-muted">' + s.orderNumber + '</small></div>' +
+            '<small class="text-muted">' + date.toLocaleDateString() + '</small>' +
+            '</div></div>';
+    }).join('');
+}
+
+function trackOrder(trackingId) {
+    document.getElementById('trackingInput').value = trackingId;
+    doTrack(trackingId);
+}
+
+function doTrack(trackingId) {
+    if (!trackingId || trackingId.trim().length < 5) {
+        document.getElementById('trackingResult').style.display = 'none';
+        document.getElementById('trackingError').style.display = 'block';
+        document.getElementById('trackingError').textContent = 'Please enter a valid Tracking ID';
+        document.getElementById('trackingEmpty').style.display = 'none';
+        return;
+    }
+
+    document.getElementById('trackingEmpty').style.display = 'none';
+    document.getElementById('trackingResult').style.display = 'none';
+    document.getElementById('trackingError').style.display = 'none';
+
+    api.getTracking(trackingId.trim()).then(function(data) {
+        document.getElementById('trackingResult').style.display = 'block';
+        document.getElementById('trackOrderNumber').textContent = data.orderNumber;
+        document.getElementById('trackCustomerName').textContent = data.user.fullName + ' - ' + (data.user.phone || '');
+        document.getElementById('trackPaymentMethod').textContent = data.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Bank Transfer';
+        document.getElementById('trackPaymentStatus').textContent = ' (' + data.paymentStatus + ')';
+        document.getElementById('trackTotalAmount').textContent = '₦' + data.totalAmount.toFixed(2);
+        document.getElementById('trackAddress').textContent = data.shippingAddress + ', ' + data.shippingCity;
+        document.getElementById('deliveryManName').textContent = data.deliveryMan ? 'Delivered by: ' + data.deliveryMan.fullName : '';
+
+        var status = data.status;
+        var pill = document.getElementById('trackStatusPill');
+        var statusColors = { PENDING: 'bg-warning text-dark', PROCESSING: 'bg-info text-dark', SHIPPED: 'bg-primary text-white', DELIVERED: 'bg-success text-white' };
+        pill.className = 'status-pill ' + (statusColors[status] || 'bg-secondary text-white');
+        pill.textContent = status;
+
+        var timeline = document.getElementById('trackTimeline');
+        var steps = [
+            { key: 'ORDERED', label: 'Order Placed', date: data.createdAt, done: true },
+            { key: 'PAID', label: 'Payment ' + (data.paymentStatus === 'PAID' ? 'Received' : 'Pending'), date: data.paidAt, done: data.paymentStatus === 'PAID' },
+            { key: 'SHIPPED', label: 'Shipped', date: data.shippedAt, done: !!data.shippedAt },
+            { key: 'DELIVERED', label: 'Delivered', date: data.deliveredAt, done: !!data.deliveredAt },
+        ];
+        var activeIndex = -1;
+        for (var i = 0; i < steps.length; i++) {
+            if (!steps[i].done) { activeIndex = i; break; }
+        }
+        if (activeIndex === -1) activeIndex = steps.length - 1;
+        timeline.innerHTML = steps.map(function(s, i) {
+            var cls = s.done ? 'completed' : (i === activeIndex ? 'active' : '');
+            return '<div class="timeline-item ' + cls + '">' +
+                '<div class="dot"></div>' +
+                '<strong>' + s.label + '</strong><br>' +
+                '<small class="text-muted">' + (s.date ? new Date(s.date).toLocaleString() : 'Pending') + '</small>' +
+                '</div>';
+        }).join('');
+
+        // Map
+        var mapEl = document.getElementById('map');
+        if (data.deliveryLocation && data.deliveryLocation.latitude) {
+            var lat = data.deliveryLocation.latitude;
+            var lng = data.deliveryLocation.longitude;
+            var iframe = '<iframe width="100%" height="450" style="border:0;border-radius:12px" loading="lazy" ' +
+                'src="https://www.openstreetmap.org/export/embed.html?bbox=' + (lng - 0.01) + ',' + (lat - 0.01) + ',' + (lng + 0.01) + ',' + (lat + 0.01) + '&layer=mapnik&marker=' + lat + ',' + lng + '">' +
+                '</iframe>';
+            mapEl.innerHTML = iframe;
+            document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date(data.deliveryLocation.timestamp).toLocaleString();
+        } else {
+            mapEl.innerHTML = '<div class="text-center text-muted py-5"><i class="fas fa-map-marker-alt fa-3x mb-2 d-block"></i><span>Location not yet available</span></div>';
+            document.getElementById('lastUpdated').textContent = 'Waiting for delivery man to share location...';
+        }
+
+        // Save to recently tracked
+        var saved = JSON.parse(localStorage.getItem('trackingIds') || '[]');
+        var exists = saved.some(function(s) { return s.trackingId === data.trackingId; });
+        if (!exists) {
+            saved.push({
+                trackingId: data.trackingId,
+                orderNumber: data.orderNumber,
+                date: new Date().toISOString(),
+            });
+            localStorage.setItem('trackingIds', JSON.stringify(saved));
+            loadSavedTracking();
+        }
+
+        // Start polling
+        if (pollInterval) clearInterval(pollInterval);
+        if (status !== 'DELIVERED') {
+            pollInterval = setInterval(function() {
+                api.getTracking(trackingId.trim()).then(function(updated) {
+                    if (updated.deliveryLocation && updated.deliveryLocation.latitude) {
+                        var lat = updated.deliveryLocation.latitude;
+                        var lng = updated.deliveryLocation.longitude;
+                        var iframe = '<iframe width="100%" height="450" style="border:0;border-radius:12px" loading="lazy" ' +
+                            'src="https://www.openstreetmap.org/export/embed.html?bbox=' + (lng - 0.01) + ',' + (lat - 0.01) + ',' + (lng + 0.01) + ',' + (lat + 0.01) + '&layer=mapnik&marker=' + lat + ',' + lng + '">' +
+                            '</iframe>';
+                        document.getElementById('map').innerHTML = iframe;
+                        document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date(updated.deliveryLocation.timestamp).toLocaleString();
+                    }
+                    if (updated.status !== status) {
+                        doTrack(trackingId);
+                    }
+                }).catch(function() {});
+            }, 10000);
+        }
+    }).catch(function(err) {
+        document.getElementById('trackingResult').style.display = 'none';
+        document.getElementById('trackingError').style.display = 'block';
+        document.getElementById('trackingError').textContent = err.message;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadSavedTracking();
+
+    var urlParams = new URLSearchParams(window.location.search);
+    var initialId = urlParams.get('id');
+    if (initialId) {
+        document.getElementById('trackingInput').value = initialId;
+        doTrack(initialId);
+    }
+
+    document.getElementById('trackForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var id = document.getElementById('trackingInput').value.trim();
+        if (id) doTrack(id);
+    });
+});
+</script>
+</body>
+</html>

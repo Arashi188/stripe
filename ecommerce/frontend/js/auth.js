@@ -47,14 +47,29 @@ const auth = {
         window.location.href = 'login.html';
     },
 
+    getRole: () => {
+        const user = auth.getUser();
+        return user ? user.role : null;
+    },
+
     isAdmin: () => {
         const user = auth.getUser();
         return user && user.role === 'ADMIN';
     },
 
+    clearSession: () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+    },
+
+    redirectToLogin: () => {
+        const returnTo = window.location.pathname + window.location.search;
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(returnTo);
+    },
+
     redirectIfNotLoggedIn: () => {
         if (!auth.isLoggedIn()) {
-            window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+            auth.redirectToLogin();
         }
     },
 
@@ -81,8 +96,21 @@ const auth = {
         if (userName) userName.textContent = user ? user.fullName : '';
         if (adminLink) adminLink.style.display = isLoggedIn && user && user.role === 'ADMIN' ? 'block' : 'none';
 
+        const secLink = document.getElementById('secretaryLink');
+        const delLink = document.getElementById('deliveryLink');
+        if (secLink) secLink.style.display = isLoggedIn && user && user.role === 'SECRETARY' ? 'block' : 'none';
+        if (delLink) delLink.style.display = isLoggedIn && user && user.role === 'DELIVERY_MAN' ? 'block' : 'none';
+
         if (logoutBtn) {
             logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                auth.logout();
+            });
+        }
+
+        const sidebarLogout = document.getElementById('logoutBtnSidebar');
+        if (sidebarLogout) {
+            sidebarLogout.addEventListener('click', (e) => {
                 e.preventDefault();
                 auth.logout();
             });

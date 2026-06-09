@@ -5,6 +5,6 @@ Flask-JWT-Extended>=4.6.0
 SQLAlchemy>=2.0.36
 python-dotenv>=1.0.0
 stripe>=7.8.0
-# Production only (not needed for local SQLite dev):
-# psycopg2-binary==2.9.9    # PostgreSQL driver (requires MSVC build tools on Windows)
-# gunicorn==21.2.0          # WSGI server for Linux/Mac
+gunicorn==21.2.0
+requests>=2.31.0
+psycopg2-binary>=2.9.9

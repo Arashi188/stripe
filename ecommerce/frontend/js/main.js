@@ -459,37 +459,87 @@ document.addEventListener('DOMContentLoaded', () => {
                 const orders = await api.getOrderHistory();
                 const wishlist = await api.getWishlist();
 
-                document.getElementById('userName').textContent = profile.fullName;
-                document.getElementById('userEmail').textContent = profile.email;
-                if (profile.phone) document.getElementById('userPhone').textContent = profile.phone;
+                const initials = (profile.fullName || 'U').charAt(0).toUpperCase();
+                const completed = orders.filter(o => o.status === 'DELIVERED' || o.status === 'COMPLETED').length;
+
+                document.querySelectorAll('#userName, #greetingName, #profileName, #viewName').forEach(el => el.textContent = profile.fullName || 'User');
+                document.querySelectorAll('#userAvatar, #avatarInitials').forEach(el => el.textContent = initials);
+                document.querySelectorAll('#userEmail, #viewEmail, #profileEmail').forEach(el => el.textContent = profile.email || '-');
+
+                const phone = profile.phone || '-';
+                document.querySelectorAll('#userPhone, #viewPhone').forEach(el => el.textContent = phone);
+                const phoneEl = document.getElementById('profilePhone');
+                if (phoneEl) phoneEl.innerHTML = `<i class="fas fa-phone me-1"></i>${phone}`;
 
                 document.getElementById('totalOrders').textContent = orders.length;
+                document.getElementById('totalOrdersBadge').textContent = orders.length + ' Orders';
                 document.getElementById('wishlistCount').textContent = wishlist.length;
                 document.getElementById('pendingOrders').textContent = orders.filter(o => o.status === 'PENDING').length;
+                document.getElementById('pendingOrdersBadge').textContent = orders.filter(o => o.status === 'PENDING').length + ' Pending';
+                document.getElementById('completedOrders').textContent = completed;
 
-                // Profile form
-                document.getElementById('profileForm')?.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    try {
-                        await api.updateProfile({
-                            fullName: document.getElementById('editName').value,
-                            phone: document.getElementById('editPhone').value,
-                            address: document.getElementById('editAddress').value,
-                            city: document.getElementById('editCity').value,
-                            state: document.getElementById('editState').value,
-                            zipCode: document.getElementById('editZip').value,
-                            country: document.getElementById('editCountry').value,
-                        });
-                        cartManager.showToast('Profile updated!', 'success');
-                    } catch (error) {
-                        cartManager.showToast(error.message, 'error');
-                    }
+                const viewFields = { address: 'viewAddress', city: 'viewCity', state: 'viewState', zipCode: 'viewZip' };
+                Object.entries(viewFields).forEach(([key, id]) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = profile[key] || '-';
                 });
+
+                const editFields = { fullName: 'editName', phone: 'editPhone', address: 'editAddress', city: 'editCity', state: 'editState', zipCode: 'editZip', country: 'editCountry' };
+                Object.entries(editFields).forEach(([key, id]) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = profile[key] || '';
+                });
+
+                const recentContainer = document.getElementById('recentOrdersList');
+                if (recentContainer) {
+                    const recentOrders = orders.slice(0, 3);
+                    if (recentOrders.length === 0) {
+                        recentContainer.innerHTML = `
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-box-open fa-2x mb-2 d-block"></i>
+                                <span>No orders yet</span>
+                            </div>`;
+                    } else {
+                        recentContainer.innerHTML = recentOrders.map(o => `
+                            <div class="recent-order-item">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <strong class="d-block">#${o.orderNumber}</strong>
+                                        <small class="text-muted">${new Date(o.createdAt).toLocaleDateString()}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge rounded-pill status-${o.status.toLowerCase()}">${o.status}</span>
+                                        <div class="fw-bold mt-1 text-primary">₦${o.totalAmount.toFixed(2)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
             } catch (error) {
                 cartManager.showToast(error.message, 'error');
             }
         };
         loadDashboard();
+
+        document.getElementById('profileForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await api.updateProfile({
+                    fullName: document.getElementById('editName').value,
+                    phone: document.getElementById('editPhone').value,
+                    address: document.getElementById('editAddress').value,
+                    city: document.getElementById('editCity').value,
+                    state: document.getElementById('editState').value,
+                    zipCode: document.getElementById('editZip').value,
+                    country: document.getElementById('editCountry').value,
+                });
+                cartManager.showToast('Profile updated!', 'success');
+                loadDashboard();
+            } catch (error) {
+                cartManager.showToast(error.message, 'error');
+            }
+        });
     }
 
     if (page === 'order-history.html') {
@@ -542,7 +592,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (page === 'checkout.html') {
-        auth.redirectIfNotLoggedIn();
+        if (typeof auth !== 'undefined') auth.redirectIfNotLoggedIn();
+
         const cart = cartManager.getCart();
         if (cart.length === 0) {
             document.getElementById('checkoutContent').innerHTML = '<div class="empty-state"><div class="icon">🛒</div><h4>Your cart is empty</h4><p>Add some items before checking out.</p></div>';
@@ -567,50 +618,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('checkoutShipping').textContent = shipping === 0 ? 'Free' : `₦${shipping.toFixed(2)}`;
             document.getElementById('checkoutTax').textContent = `₦${tax.toFixed(2)}`;
             document.getElementById('checkoutTotal').textContent = `₦${total.toFixed(2)}`;
-
-            document.getElementById('checkoutForm')?.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const btn = e.target.querySelector('button[type="submit"]');
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
-
-                try {
-                    const orderData = {
-                        items: cart.map(item => ({ productId: item.productId, quantity: item.quantity })),
-                        shippingAddress: document.getElementById('shippingAddress').value,
-                        shippingCity: document.getElementById('shippingCity').value,
-                        shippingState: document.getElementById('shippingState').value,
-                        shippingZipCode: document.getElementById('shippingZip').value,
-                        shippingCountry: document.getElementById('shippingCountry').value,
-                        shippingPhone: document.getElementById('shippingPhone').value,
-                    };
-
-                    const order = await api.createOrder(orderData);
-                    const payment = await api.initializePayment(order.id);
-
-                    // Use Stripe.js to confirm payment
-                    if (window.Stripe) {
-                        const stripe = Stripe('pk_test_your_publishable_key');
-                        const { error } = await stripe.confirmCardPayment(payment.clientSecret);
-
-                        if (error) {
-                            throw new Error(error.message);
-                        }
-
-                        await api.verifyPayment(payment.paymentIntentId);
-                    } else {
-                        // Fallback: simulate payment verification
-                        await api.verifyPayment(payment.paymentIntentId);
-                    }
-
-                    cartManager.clearCart();
-                    window.location.href = `order-history.html?success=true`;
-                } catch (error) {
-                    cartManager.showToast(error.message, 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = 'Place Order';
-                }
-            });
         }
     }
 
@@ -623,7 +630,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await auth.login(email, password);
             if (result.success) {
                 const params = new URLSearchParams(window.location.search);
-                const redirect = params.get('redirect') || 'index.html';
+                var redirect = params.get('redirect');
+                if (!redirect) {
+                    if (result.user.role === 'ADMIN') redirect = 'admin/dashboard.html';
+                    else if (result.user.role === 'SECRETARY') redirect = 'secretary-dashboard.html';
+                    else if (result.user.role === 'DELIVERY_MAN') redirect = 'delivery-dashboard.html';
+                    else redirect = 'index.html';
+                }
                 window.location.href = redirect;
             } else {
                 cartManager.showToast(result.error, 'error');
@@ -643,5 +656,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 cartManager.showToast(result.error, 'error');
             }
         });
+    }
+
+    // Update user menu links based on role
+    var userMenuLinks = document.querySelector('.dropdown-menu');
+    if (userMenuLinks) {
+        var role = auth.getRole ? auth.getRole() : null;
+        var adminLink = document.getElementById('adminLink');
+        var secLink = document.getElementById('secretaryLink');
+        var delLink = document.getElementById('deliveryLink');
+        if (role === 'ADMIN' && adminLink) adminLink.style.display = 'block';
+        if (role === 'SECRETARY' && secLink) secLink.style.display = 'block';
+        if (role === 'DELIVERY_MAN' && delLink) delLink.style.display = 'block';
     }
 });

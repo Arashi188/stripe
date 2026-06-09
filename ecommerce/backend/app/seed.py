@@ -3,7 +3,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datetime import datetime, timezone
 from app import create_app, db
-from app.models import User, Category, Product
+from app.models import User, Category, Product, BankAccount
 from werkzeug.security import generate_password_hash
 
 
@@ -33,6 +33,26 @@ def seed_data():
             role='USER',
         )
         db.session.add(user)
+
+        # Secretary
+        secretary = User(
+            email='secretary@shoppremium.com',
+            password=generate_password_hash('secretary123'),
+            full_name='Jane Secretary',
+            phone='+2348012345678',
+            role='SECRETARY',
+        )
+        db.session.add(secretary)
+
+        # Delivery man
+        delivery_man = User(
+            email='delivery@shoppremium.com',
+            password=generate_password_hash('delivery123'),
+            full_name='James Driver',
+            phone='+2348098765432',
+            role='DELIVERY_MAN',
+        )
+        db.session.add(delivery_man)
 
         # Categories
         categories_data = [
@@ -109,10 +129,26 @@ def seed_data():
             )
             db.session.add(p)
 
+        # Bank accounts
+        bank1 = BankAccount(
+            bank_name='GTBank',
+            account_number='0123456789',
+            account_name='ShopPremium Ltd',
+        )
+        db.session.add(bank1)
+        bank2 = BankAccount(
+            bank_name='Access Bank',
+            account_number='9876543210',
+            account_name='ShopPremium Payments',
+        )
+        db.session.add(bank2)
+
         db.session.commit()
         print('Database seeded successfully!')
-        print('Admin: admin@shoppremium.com / admin123')
-        print('User:  user@example.com / user123')
+        print('Admin:        admin@shoppremium.com / admin123')
+        print('User:         user@example.com / user123')
+        print('Secretary:    secretary@shoppremium.com / secretary123')
+        print('Delivery Man: delivery@shoppremium.com / delivery123')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,149 @@
+from datetime import datetime, timezone
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from app import db
+from app.models import Order, User, Notification, BankAccount
+
+secretary_bp = Blueprint('secretary', __name__)
+
+
+def secretary_required(fn):
+    from functools import wraps
+    @wraps(fn)
+    @jwt_required()
+    def wrapper(*args, **kwargs):
+        user = User.query.get(int(get_jwt_identity()))
+        if not user or user.role not in ('SECRETARY', 'ADMIN'):
+            return {'error': 'Secretary access required'}, 403
+        return fn(*args, **kwargs)
+    return wrapper
+
+
+@secretary_bp.route('/dashboard', methods=['GET'])
+@secretary_required
+def dashboard():
+    pending_transfers = Order.query.filter_by(
+        payment_method='transfer', payment_status='PENDING', status='PENDING'
+    ).order_by(Order.created_at.desc()).all()
+
+    recent_orders = Order.query.filter(
+        Order.payment_status != 'UNPAID'
+    ).order_by(Order.created_at.desc()).limit(20).all()
+
+    approved_today = Order.query.filter(
+        Order.payment_status == 'PAID',
+        db.func.date(Order.paid_at) == db.func.date('now')
+    ).count()
+
+    return {
+        'pendingTransfers': [{
+            'id': o.id,
+            'orderNumber': o.order_number,
+            'user': {'fullName': o.user.full_name, 'email': o.user.email, 'phone': o.user.phone},
+            'totalAmount': o.total_amount,
+            'createdAt': o.created_at.isoformat(),
+            'trackingId': o.tracking_id,
+            'receiptUrl': o.receipt_url,
+            'receiptScanStatus': o.receipt_scan_status,
+            'shippingAddress': o.shipping_address,
+            'shippingCity': o.shipping_city,
+            'orderItems': [{
+                'productName': i.product_name,
+                'quantity': i.quantity,
+                'unitPrice': i.unit_price,
+            } for i in o.order_items],
+        } for o in pending_transfers],
+        'recentOrders': [{
+            'id': o.id,
+            'orderNumber': o.order_number,
+            'user': {'fullName': o.user.full_name, 'email': o.user.email},
+            'totalAmount': o.total_amount,
+            'paymentMethod': o.payment_method,
+            'paymentStatus': o.payment_status,
+            'status': o.status,
+            'trackingId': o.tracking_id,
+            'receiptUrl': o.receipt_url,
+            'createdAt': o.created_at.isoformat(),
+        } for o in recent_orders],
+        'approvedToday': approved_today,
+        'pendingCount': len(pending_transfers),
+    }
+
+
+@secretary_bp.route('/approve-payment/<int:order_id>', methods=['POST'])
+@secretary_required
+def approve_payment(order_id):
+    order = Order.query.get_or_404(order_id)
+    if order.payment_method != 'transfer':
+        return {'error': 'Not a transfer order'}, 400
+    if not order.receipt_url:
+        return {'error': 'Cannot approve order without a receipt'}, 400
+    order.payment_status = 'PAID'
+    order.status = 'PROCESSING'
+    order.paid_at = datetime.now(timezone.utc)
+    if not order.tracking_id:
+        order.generate_tracking_id()
+    admins = User.query.filter_by(role='ADMIN').all()
+    for admin in admins:
+        db.session.add(Notification(
+            user_id=admin.id,
+            order_id=order.id,
+            message=f'Payment approved for Order #{order.order_number}',
+            is_urgent=False,
+        ))
+    db.session.commit()
+    return {
+        'status': 'success',
+        'message': 'Payment approved',
+        'trackingId': order.tracking_id,
+        'orderNumber': order.order_number,
+        'orderId': order.id,
+    }
+
+
+@secretary_bp.route('/assign-delivery/<int:order_id>', methods=['POST'])
+@secretary_required
+def assign_delivery(order_id):
+    data = request.get_json()
+    delivery_man_id = data.get('deliveryManId') if data else None
+    if not delivery_man_id:
+        return {'error': 'Delivery man ID required'}, 400
+    delivery_man = User.query.get(delivery_man_id)
+    if not delivery_man or delivery_man.role != 'DELIVERY_MAN':
+        return {'error': 'Invalid delivery man'}, 400
+    order = Order.query.get_or_404(order_id)
+    order.delivery_man_id = delivery_man_id
+    order.status = 'SHIPPED'
+    order.shipped_at = datetime.now(timezone.utc)
+    if order.payment_method == 'transfer' and order.payment_status == 'PENDING':
+        order.payment_status = 'PAID'
+        order.paid_at = datetime.now(timezone.utc)
+    if not order.tracking_id:
+        order.generate_tracking_id()
+    db.session.commit()
+    Notification(
+        user_id=delivery_man_id,
+        order_id=order.id,
+        message=f'New delivery assigned: Order #{order.order_number}',
+        is_urgent=True,
+    )
+    db.session.commit()
+    return {'status': 'success', 'message': f'Assigned to {delivery_man.full_name}', 'trackingId': order.tracking_id}
+
+
+@secretary_bp.route('/delivery-men', methods=['GET'])
+@secretary_required
+def list_delivery_men():
+    men = User.query.filter_by(role='DELIVERY_MAN').all()
+    return [{'id': m.id, 'fullName': m.full_name, 'phone': m.phone, 'email': m.email} for m in men]
+
+
+@secretary_bp.route('/bank-accounts', methods=['GET'])
+def bank_accounts():
+    accounts = BankAccount.query.filter_by(is_active=True).all()
+    return [{
+        'id': a.id,
+        'bankName': a.bank_name,
+        'accountNumber': a.account_number,
+        'accountName': a.account_name,
+    } for a in accounts]
