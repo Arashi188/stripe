@@ -55,7 +55,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('totalOrders').textContent = data.totalOrders;
             document.getElementById('totalUsers').textContent = data.totalUsers;
             document.getElementById('totalProducts').textContent = data.totalProducts;
-            document.getElementById('pendingOrders').textContent = data.pendingOrders;
             document.getElementById('revenue').textContent = '₦' + data.revenue.toFixed(2);
 
             const tbody = document.getElementById('dashboardOrdersTable');
@@ -144,28 +143,43 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
 
-            const data = {
-                name: document.getElementById('productName').value,
-                description: document.getElementById('productDescription').value,
-                price: parseFloat(document.getElementById('productPrice').value),
-                compareAtPrice: parseFloat(document.getElementById('productComparePrice').value) || null,
-                imageUrl: document.getElementById('productImage').value,
-                stockQuantity: parseInt(document.getElementById('productStock').value),
-                sku: document.getElementById('productSku').value,
-                brand: document.getElementById('productBrand').value,
-                categoryId: parseInt(document.getElementById('productCategory').value) || null,
-                featured: document.getElementById('productFeatured').checked,
-            };
-
             try {
+                let imageUrl = document.getElementById('productImage').value;
+                if (pendingFile) {
+                    const formData = new FormData();
+                    formData.append('file', pendingFile);
+                    const baseUrl = typeof API_BASE !== 'undefined' ? API_BASE : 'http://localhost:5001/api';
+                    const res = await fetch(`${baseUrl}/upload`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${api.getToken()}` },
+                        body: formData,
+                    });
+                    const data = await res.json();
+                    if (data.url) imageUrl = data.url;
+                }
+
+                const productData = {
+                    name: document.getElementById('productName').value,
+                    description: document.getElementById('productDescription').value,
+                    price: parseFloat(document.getElementById('productPrice').value),
+                    compareAtPrice: parseFloat(document.getElementById('productComparePrice').value) || null,
+                    imageUrl: imageUrl,
+                    stockQuantity: parseInt(document.getElementById('productStock').value),
+                    sku: document.getElementById('productSku').value,
+                    brand: document.getElementById('productBrand').value,
+                    categoryId: parseInt(document.getElementById('productCategory').value) || null,
+                    featured: document.getElementById('productFeatured').checked,
+                };
+
                 const productId = document.getElementById('productId').value;
                 if (productId) {
-                    await api.admin.updateProduct(parseInt(productId), data);
+                    await api.admin.updateProduct(parseInt(productId), productData);
                     cartManager.showToast('Product updated!', 'success');
                 } else {
-                    await api.admin.createProduct(data);
+                    await api.admin.createProduct(productData);
                     cartManager.showToast('Product created!', 'success');
                 }
+                pendingFile = null;
                 productForm.reset();
                 document.getElementById('productId').value = '';
                 document.getElementById('productImage').value = '';
@@ -180,28 +194,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    let pendingFile = null;
+
     window.uploadProductImage = (input) => {
-        const file = input.files[0];
-        if (!file) return;
-        const preview = document.getElementById('imagePreview');
-        const img = preview.querySelector('img');
-        const reader = new FileReader();
-        reader.onload = (e) => { img.src = e.target.result; preview.style.display = 'block'; };
-        reader.readAsDataURL(file);
-        const formData = new FormData();
-        formData.append('file', file);
-        const baseUrl = typeof API_BASE !== 'undefined' ? API_BASE : 'http://localhost:5001/api';
-        fetch(`${baseUrl}/upload`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${api.getToken()}` },
-            body: formData,
-        })
-        .then(r => r.json())
-        .then(data => { if (data.url) { document.getElementById('productImage').value = data.url; cartManager.showToast('Image uploaded!', 'success'); } })
-        .catch(err => { cartManager.showToast('Upload failed: ' + err.message, 'error'); });
+        try {
+            const file = input.files[0];
+            if (!file) return;
+            pendingFile = file;
+            const preview = document.getElementById('imagePreview');
+            const img = preview.querySelector('img');
+            const reader = new FileReader();
+            reader.onload = (e) => { img.src = e.target.result; preview.style.display = 'block'; };
+            reader.readAsDataURL(file);
+        } catch (err) { console.error('uploadProductImage error:', err); }
     };
 
+    document.getElementById('productImageInput')?.addEventListener('change', function () {
+        window.uploadProductImage(this);
+    });
+
     window.clearProductImage = () => {
+        pendingFile = null;
         document.getElementById('productImage').value = '';
         document.getElementById('productImageInput').value = '';
         document.getElementById('imagePreview').style.display = 'none';
