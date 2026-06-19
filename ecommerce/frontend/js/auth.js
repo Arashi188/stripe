@@ -94,6 +94,15 @@ const auth = {
         if (loginLink) loginLink.style.display = isLoggedIn ? 'none' : 'block';
         if (userMenu) userMenu.style.display = isLoggedIn ? 'block' : 'none';
         if (userName) userName.textContent = user ? user.fullName : '';
+        var avatarEl = document.getElementById('userAvatar');
+        if (avatarEl) {
+            var name = user ? user.fullName : '';
+            var parts = name ? name.trim().split(/\s+/) : [];
+            var initials = '?';
+            if (parts.length >= 2) initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            else if (parts.length === 1) initials = parts[0][0].toUpperCase();
+            avatarEl.textContent = initials;
+        }
         if (adminLink) adminLink.style.display = isLoggedIn && user && user.role === 'ADMIN' ? 'block' : 'none';
 
         const secLink = document.getElementById('secretaryLink');

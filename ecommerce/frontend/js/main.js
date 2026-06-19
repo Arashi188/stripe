@@ -2,6 +2,40 @@
 // Main Application Script
 // =============================================
 
+function togglePassword(inputId, btn) {
+    var input = document.getElementById(inputId);
+    if (!input) return;
+    var icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+function getInitials(name) {
+    if (!name) return '?';
+    var parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+}
+
+function updateAvatar() {
+    var user = auth.getUser();
+    var avatarEl = document.getElementById('userAvatar');
+    var nameEl = document.getElementById('userName');
+    if (avatarEl) {
+        avatarEl.textContent = user ? getInitials(user.fullName) : '?';
+    }
+    if (nameEl && user) {
+        nameEl.textContent = user.fullName;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // Navbar scroll effect
@@ -621,6 +655,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Newsletter form
+    document.getElementById('newsletterForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var email = document.getElementById('newsletterEmail').value;
+        if (email) {
+            cartManager.showToast('Thanks for subscribing!', 'success');
+            document.getElementById('newsletterEmail').value = '';
+        }
+    });
+
     // Login page
     if (page === 'login.html') {
         document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
@@ -656,6 +700,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 cartManager.showToast(result.error, 'error');
             }
         });
+    }
+
+    // Update avatar initials
+    updateAvatar();
+    var avatarObserver = new MutationObserver(updateAvatar);
+    var userNameEl = document.getElementById('userName');
+    if (userNameEl) {
+        avatarObserver.observe(userNameEl, { childList: true, characterData: true, subtree: true });
     }
 
     // Update user menu links based on role

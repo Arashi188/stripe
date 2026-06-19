@@ -1724,3 +1724,169 @@ h1, h2, h3, h4, h5, h6 {
     /* padding-right: 100px; */
     
 }
+
+/* ── Nav icons group ── */
+.nav-icons-group {
+    background: #f0f2f5;
+    border-radius: 50px;
+    padding: 3px 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    gap: 2px;
+    align-items: center;
+}
+
+/* ── Nav icon buttons ── */
+.nav-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    padding: 0 10px;
+    border-radius: 50px;
+    border: none;
+    background: transparent;
+    color: #495057;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+    white-space: nowrap;
+}
+.nav-icon-btn:hover {
+    background: rgba(13, 110, 253, 0.08);
+    color: #0d6efd;
+    transform: translateY(-1px);
+}
+.nav-icon-btn:active {
+    transform: translateY(0);
+}
+.nav-icon-btn.dropdown-toggle {
+    padding: 0 10px;
+    gap: 4px;
+}
+
+/* ── User avatar ── */
+.user-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d6efd, #6f42c1);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+/* Suppress Bootstrap default dropdown arrow on nav-icon-btn toggles */
+.nav-icon-btn.dropdown-toggle::after {
+    display: none !important;
+}
+
+/* ── User name text ── */
+.user-name-text {
+    margin-left: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
+}
+
+/* Ensure all icon-fonts inside nav-icon-btn are vertically centered */
+.nav-icon-btn i,
+.nav-icon-btn svg {
+    line-height: 1;
+    vertical-align: middle;
+}
+
+/* ── Dropdown arrow rotation ── */
+.dropdown-arrow {
+    font-size: 0.6rem;
+    margin-left: 4px;
+    transition: transform 0.2s ease;
+}
+.dropdown.show .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* ── Cart badge with pulse animation ── */
+.cart-badge {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    background: #dc3545;
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    transition: transform 0.15s ease;
+}
+.cart-badge.pulse {
+    animation: badgePulse 0.4s ease;
+}
+@keyframes badgePulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.35); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+
+/* ── Mobile responsiveness ── */
+@media (max-width: 767.98px) {
+    .user-name-text {
+        display: none !important;
+    }
+    .nav-icons-group {
+        padding: 2px 4px;
+    }
+    .nav-icon-btn {
+        height: 40px;
+        min-width: 40px;
+        padding: 0 8px;
+    }
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+/* Password visibility toggle */
+.password-wrapper {
+    position: relative;
+}
+.password-wrapper .password-toggle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    border: none;
+    background: transparent;
+    z-index: 5;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+}
+.password-wrapper .password-toggle:hover {
+    color: #0d6efd;
+}
+.password-wrapper input {
+    padding-right: 40px;
+}
+.password-wrapper input.form-control-lg + .password-toggle {
+    width: 46px;
+    font-size: 1.1rem;
+}

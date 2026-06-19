@@ -66,7 +66,22 @@ const cartManager = {
     updateCartCount: () => {
         const count = cartManager.getCount();
         document.querySelectorAll('.cart-count').forEach(el => {
+            var oldCount = el.textContent;
             el.textContent = count;
+            if (oldCount !== count.toString()) {
+                el.classList.remove('pulse');
+                void el.offsetWidth;
+                el.classList.add('pulse');
+            }
+        });
+        document.querySelectorAll('.cart-badge').forEach(el => {
+            var oldCount = el.textContent;
+            el.textContent = count;
+            if (oldCount !== count.toString()) {
+                el.classList.remove('pulse');
+                void el.offsetWidth;
+                el.classList.add('pulse');
+            }
         });
     },
 
