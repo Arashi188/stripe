@@ -18,7 +18,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = _database_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://127.0.0.1:5501')
+    FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://stripe-two-dun.vercel.app')
 
 
 

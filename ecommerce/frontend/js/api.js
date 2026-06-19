@@ -1,6 +1,6 @@
 // === AFTER deploying backend to Render, replace the line below with your Render URL ===
 // Example: const RENDER_URL = 'https://my-shop-api.onrender.com';
-const RENDER_URL = 'https://YOUR_RENDER_APP_NAME.onrender.com';
+const RENDER_URL = 'https://stripe-584v.onrender.com';
 
 const USE_LOCAL = !window.location.hostname
     || window.location.hostname === 'localhost'
