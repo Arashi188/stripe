@@ -85,4 +85,16 @@ def create_app(config_name='development'):
         from app.migrate import run_migrations
         run_migrations()
 
+        from app.models import User
+        from werkzeug.security import generate_password_hash
+        if not User.query.first():
+            users = [
+                User(email='admin@shoppremium.com', password=generate_password_hash('admin123'), full_name='Admin User', role='ADMIN'),
+                User(email='user@example.com', password=generate_password_hash('user123'), full_name='John Doe', role='USER'),
+                User(email='secretary@shoppremium.com', password=generate_password_hash('secretary123'), full_name='Jane Secretary', phone='+2348012345678', role='SECRETARY'),
+                User(email='delivery@shoppremium.com', password=generate_password_hash('delivery123'), full_name='James Driver', phone='+2348098765432', role='DELIVERY_MAN'),
+            ]
+            db.session.add_all(users)
+            db.session.commit()
+
     return app
