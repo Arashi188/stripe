@@ -7,6 +7,31 @@ from app.models import User, Category, Product, BankAccount
 from werkzeug.security import generate_password_hash
 
 
+def create_admin_if_not_exists():
+    """Check if an admin user exists; if not, create one from env vars."""
+    if User.query.filter_by(role='ADMIN').first():
+        print('Admin already exists, skipping')
+        return
+
+    email = os.environ.get('ADMIN_EMAIL')
+    password = os.environ.get('ADMIN_PASSWORD')
+    name = os.environ.get('ADMIN_NAME')
+
+    if not all([email, password, name]):
+        print('ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME not all set. Skipping admin creation.')
+        return
+
+    admin = User(
+        email=email,
+        password=generate_password_hash(password),
+        full_name=name,
+        role='ADMIN',
+    )
+    db.session.add(admin)
+    db.session.commit()
+    print(f'Admin user created: {email}')
+
+
 def seed_data():
     app = create_app()
     with app.app_context():
