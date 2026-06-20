@@ -8,6 +8,14 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+    <style>
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .error-card { background: #fff3cd; border: 1px solid #ffc107; border-radius: 12px; padding: 2rem; text-align: center; }
+        .error-card .btn { min-width: 140px; }
+        .loading-text { color: #6c757d; font-size: 0.9rem; }
+        .timed-out-text { color: #dc3545; font-size: 0.9rem; }
+    </style>
 </head>
 <body>
 
@@ -26,7 +34,7 @@
                 <div class="nav-icons-group d-flex align-items-center">
                     <div class="dropdown" id="userMenu">
                         <a class="nav-icon-btn rounded-pill dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown">
-                            <div class="user-avatar" id="userAvatar">?</div>
+                            <div class="user-avatar" id="navAvatar">?</div>
                             <span class="user-name-text" id="userName"></span>
                             <i class="fas fa-chevron-down dropdown-arrow ms-1"></i>
                         </a>
@@ -56,7 +64,7 @@
     <div class="container">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
             <div class="d-flex align-items-center gap-3">
-                <div class="dashboard-avatar" id="userAvatar">U</div>
+                <div class="dashboard-avatar" id="headerAvatar">U</div>
                 <div>
                     <h1 class="fw-bold mb-1 text-white">My Dashboard</h1>
                     <p class="mb-0 text-white-50">Welcome back, <span id="greetingName" class="fw-semibold text-white">User</span></p>
@@ -71,8 +79,16 @@
 
 <section class="dashboard-body py-5">
     <div class="container">
-        <div class="row g-4">
+        <!-- Loading indicator for slow connections -->
+        <div id="loadingIndicator" class="text-center mb-3" style="display:none">
+            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+            <span class="loading-text" id="loadingStatusText">Loading your dashboard...</span>
+        </div>
 
+        <!-- Error banner (hidden by default) -->
+        <div id="errorBanner" class="error-card mb-4" style="display:none"></div>
+
+        <div class="row g-4">
             <!-- Left Sidebar -->
             <div class="col-lg-4">
                 <!-- Profile Summary Card -->
@@ -96,17 +112,17 @@
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-3"><i class="fas fa-link me-2 text-primary"></i>Quick Links</h5>
                         <div class="d-grid gap-2">
-                            <a href="order-history.html" class="quick-link-btn">
+                            <a href="order-history.html" class="quick-link-btn" id="myOrdersLink">
                                 <i class="fas fa-truck"></i>
                                 <span>My Orders</span>
                                 <i class="fas fa-chevron-right ms-auto"></i>
                             </a>
-                            <a href="shop.html" class="quick-link-btn">
+                            <a href="shop.html" class="quick-link-btn" id="browseProductsLink">
                                 <i class="fas fa-store"></i>
                                 <span>Browse Products</span>
                                 <i class="fas fa-chevron-right ms-auto"></i>
                             </a>
-                            <a href="cart.html" class="quick-link-btn">
+                            <a href="cart.html" class="quick-link-btn" id="viewCartLink">
                                 <i class="fas fa-shopping-cart"></i>
                                 <span>View Cart</span>
                                 <i class="fas fa-chevron-right ms-auto"></i>
@@ -122,7 +138,7 @@
             </div>
 
             <!-- Right Main Content -->
-            <div class="col-lg-8">
+            <div class="col-lg-8" id="mainContentArea">
                 <!-- Stats Row -->
                 <div class="row g-3 mb-4">
                     <div class="col-md-3 col-6">
@@ -254,7 +270,7 @@
                                             <input type="text" class="form-control form-control-lg" id="editCountry" placeholder="Country">
                                         </div>
                                         <div class="col-12">
-                                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                            <button type="submit" class="btn btn-primary btn-lg px-5" id="saveProfileBtn">
                                                 <i class="fas fa-save me-2"></i>Save Changes
                                             </button>
                                         </div>
@@ -266,14 +282,14 @@
                 </div>
 
                 <!-- Recent Orders Preview -->
-                <div class="card border-0 shadow-sm">
+                <div class="card border-0 shadow-sm" id="recentOrdersCard">
                     <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0"><i class="fas fa-history me-2 text-primary"></i>Recent Orders</h5>
                         <a href="order-history.html" class="btn btn-outline-primary btn-sm rounded-pill px-3">View All</a>
                     </div>
                     <div class="card-body p-4 pt-2">
                         <div id="recentOrdersList">
-                            <div class="text-center text-muted py-4">
+                            <div class="text-center text-muted py-4" id="noOrdersPlaceholder">
                                 <i class="fas fa-box-open fa-2x mb-2 d-block"></i>
                                 <span>No orders yet</span>
                             </div>
@@ -290,5 +306,511 @@
 <script src="js/auth.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/main.js"></script>
+<script>
+(function() {
+    'use strict';
+
+    var REQUEST_TIMEOUT_MS = 10000;
+    var SLOW_LOAD_THRESHOLD_MS = 3000;
+    var slowLoadTimer = null;
+    var pageLoaded = false;
+
+    // ── DOM refs ──
+    var $ = function(id) { return document.getElementById(id); };
+
+    // ── Utility: fetch with timeout ──
+    function fetchWithTimeout(fetchPromise, timeoutMs) {
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, timeoutMs);
+        var originalSignal = fetchPromise.signal;
+        var combinedSignal;
+        if (originalSignal) {
+            combinedSignal = anySignal([originalSignal, controller.signal]);
+        } else {
+            combinedSignal = controller.signal;
+        }
+        var wrappedPromise = fetchPromise.then(function(result) {
+            clearTimeout(timeoutId);
+            return result;
+        }, function(err) {
+            clearTimeout(timeoutId);
+            throw err;
+        });
+        wrappedPromise._controller = controller;
+        return wrappedPromise;
+    }
+
+    function anySignal(signals) {
+        var controller = new AbortController();
+        function onAbort() { controller.abort(); }
+        signals.forEach(function(s) {
+            if (s.aborted) { controller.abort(); return; }
+            s.addEventListener('abort', onAbort, { once: true });
+        });
+        return controller.signal;
+    }
+
+    // ── Attach click handlers IMMEDIATELY ──
+    function attachEventListeners() {
+        console.log('Attaching click handlers...');
+
+        // Logout from navbar
+        var logoutBtn = $('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Logging out...');
+                auth.logout();
+                window.location.href = 'index.html';
+            });
+        }
+
+        // Logout from sidebar
+        var logoutSidebar = $('logoutBtnSidebar');
+        if (logoutSidebar) {
+            logoutSidebar.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Logging out from sidebar...');
+                auth.logout();
+                window.location.href = 'index.html';
+            });
+        }
+
+        // Profile form submit
+        var profileForm = $('profileForm');
+        if (profileForm) {
+            profileForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveProfile();
+            });
+        }
+
+        console.log('Click handlers attached successfully.');
+    }
+
+    // ── Auth check ──
+    function checkAuth() {
+        console.log('Checking authentication...');
+        if (typeof auth === 'undefined') {
+            console.error('Auth module not loaded');
+            showError('Application error: auth module not loaded. Please refresh the page.');
+            return false;
+        }
+        if (!auth.isLoggedIn()) {
+            console.log('User not logged in. Redirecting to login...');
+            auth.redirectToLogin();
+            return false;
+        }
+        console.log('User is logged in.');
+        return true;
+    }
+
+    // ── Show cached profile instantly ──
+    function loadCachedProfile() {
+        console.log('Loading cached profile...');
+        if (typeof auth === 'undefined') return;
+
+        var cachedUser = auth.getUser();
+        if (cachedUser) {
+            console.log('Cached user found:', cachedUser.email || cachedUser.fullName);
+            renderProfile(cachedUser);
+            renderNavbar(cachedUser);
+            $('greetingName').textContent = cachedUser.fullName || 'User';
+        } else {
+            console.log('No cached user available.');
+        }
+    }
+
+    // ── Show loading indicator after 3s ──
+    function startSlowLoadTimer() {
+        slowLoadTimer = setTimeout(function() {
+            var indicator = $('loadingIndicator');
+            var statusText = $('loadingStatusText');
+            if (indicator && statusText) {
+                indicator.style.display = 'block';
+                statusText.textContent = 'Still loading your dashboard...';
+            }
+        }, SLOW_LOAD_THRESHOLD_MS);
+    }
+
+    function clearSlowLoadTimer() {
+        if (slowLoadTimer) {
+            clearTimeout(slowLoadTimer);
+            slowLoadTimer = null;
+        }
+        var indicator = $('loadingIndicator');
+        if (indicator) indicator.style.display = 'none';
+    }
+
+    // ── Fetch fresh profile from server ──
+    async function fetchFreshProfile() {
+        console.log('Fetching fresh profile data...');
+
+        if (typeof api === 'undefined' || typeof api.getProfile !== 'function') {
+            console.error('api.getProfile not available');
+            return null;
+        }
+
+        try {
+            var result = await fetchWithTimeout(
+                api.getProfile(),
+                REQUEST_TIMEOUT_MS
+            );
+            console.log('Profile loaded successfully');
+            return result;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                console.error('Profile fetch failed: timeout (10s)');
+                return { _error: 'timeout' };
+            }
+            if (err.message && (err.message.indexOf('401') !== -1 || /unauthorized|invalid token/i.test(err.message))) {
+                console.error('Profile fetch failed: token expired/invalid');
+                return { _error: 'unauthorized' };
+            }
+            if (err.message && (err.message.indexOf('fetch') !== -1 || err.message.indexOf('network') !== -1 || err.message.indexOf('Failed to fetch') !== -1)) {
+                console.error('Profile fetch failed: network error');
+                return { _error: 'network' };
+            }
+            console.error('Profile fetch failed:', err.message || err);
+            return { _error: 'unknown', message: err.message };
+        }
+    }
+
+    // ── Fetch order history ──
+    async function fetchOrders() {
+        console.log('Fetching order history...');
+
+        if (typeof api === 'undefined' || typeof api.getOrderHistory !== 'function') {
+            console.error('api.getOrderHistory not available');
+            return null;
+        }
+
+        try {
+            var orders = await fetchWithTimeout(
+                api.getOrderHistory(),
+                REQUEST_TIMEOUT_MS
+            );
+            console.log('Orders loaded successfully');
+            return orders;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                console.error('Orders fetch failed: timeout (10s)');
+                return { _error: 'timeout' };
+            }
+            if (err.message && (err.message.indexOf('401') !== -1 || /unauthorized|invalid token/i.test(err.message))) {
+                console.error('Orders fetch failed: token expired/invalid');
+                return { _error: 'unauthorized' };
+            }
+            if (err.message && (err.message.indexOf('fetch') !== -1 || err.message.indexOf('network') !== -1 || err.message.indexOf('Failed to fetch') !== -1)) {
+                console.error('Orders fetch failed: network error');
+                return { _error: 'network' };
+            }
+            console.error('Orders fetch failed:', err.message || err);
+            return { _error: 'unknown', message: err.message };
+        }
+    }
+
+    // ── Render profile data ──
+    function renderProfile(user) {
+        if (!user) return;
+
+        var name = user.fullName || user.full_name || user.name || 'User';
+        var email = user.email || 'email@example.com';
+        var phone = user.phone || 'Not set';
+        var address = user.address || 'Not set';
+        var city = user.city || 'Not set';
+        var state = user.state || 'Not set';
+        var zip = user.zipCode || user.zip_code || 'Not set';
+        var country = user.country || 'Not set';
+        var initial = name.charAt(0).toUpperCase() || 'U';
+
+        // Update avatar initials
+        var avatarEl = $('avatarInitials');
+        if (avatarEl) avatarEl.textContent = initial;
+
+        // Profile card
+        var profileName = $('profileName');
+        if (profileName) profileName.textContent = name;
+        var profileEmail = $('profileEmail');
+        if (profileEmail) profileEmail.textContent = email;
+        var profilePhone = $('profilePhone');
+        if (profilePhone) profilePhone.innerHTML = '<i class="fas fa-phone me-1"></i>' + phone;
+
+        // View tab
+        var viewName = $('viewName');
+        if (viewName) viewName.textContent = name;
+        var viewEmail = $('viewEmail');
+        if (viewEmail) viewEmail.textContent = email;
+        var viewPhone = $('viewPhone');
+        if (viewPhone) viewPhone.textContent = phone;
+        var viewAddress = $('viewAddress');
+        if (viewAddress) viewAddress.textContent = address;
+        var viewCity = $('viewCity');
+        if (viewCity) viewCity.textContent = city;
+        var viewState = $('viewState');
+        if (viewState) viewState.textContent = state;
+        var viewZip = $('viewZip');
+        if (viewZip) viewZip.textContent = zip;
+
+        // Edit tab
+        var editName = $('editName');
+        if (editName) editName.value = name;
+        var editPhone = $('editPhone');
+        if (editPhone) editPhone.value = phone === 'Not set' ? '' : phone;
+        var editAddress = $('editAddress');
+        if (editAddress) editAddress.value = address === 'Not set' ? '' : address;
+        var editCity = $('editCity');
+        if (editCity) editCity.value = city === 'Not set' ? '' : city;
+        var editState = $('editState');
+        if (editState) editState.value = state === 'Not set' ? '' : state;
+        var editZip = $('editZip');
+        if (editZip) editZip.value = zip === 'Not set' ? '' : zip;
+        var editCountry = $('editCountry');
+        if (editCountry) editCountry.value = country === 'Not set' ? '' : country;
+    }
+
+    // ── Render navbar (avatar + name) ──
+    function renderNavbar(user) {
+        if (!user) return;
+        var name = user.fullName || user.full_name || user.name || 'User';
+        var initial = name.charAt(0).toUpperCase() || 'U';
+
+        var navAvatar = $('navAvatar');
+        if (navAvatar) navAvatar.textContent = initial;
+        var userName = $('userName');
+        if (userName) userName.textContent = name;
+    }
+
+    // ── Render orders ──
+    function renderOrders(orders) {
+        var listEl = $('recentOrdersList');
+        var placeholder = $('noOrdersPlaceholder');
+        if (!listEl) return;
+
+        // Remove placeholder if it exists
+        if (placeholder) placeholder.style.display = 'none';
+
+        if (!orders || !Array.isArray(orders) || orders.length === 0) {
+            if (placeholder) placeholder.style.display = 'block';
+            return;
+        }
+
+        var recentOrders = orders.slice(0, 5);
+        var html = '';
+        recentOrders.forEach(function(order) {
+            var status = order.status || 'pending';
+            var statusClass = 'status-' + status.toLowerCase();
+            var itemsCount = order.items ? order.items.length : (order.orderItems ? order.orderItems.length : 0);
+            var amount = order.totalAmount || order.total || 0;
+            var orderNum = order.orderNumber || order.id || '#';
+            var statusText = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
+            html += '<div class="recent-order-item d-flex justify-content-between align-items-center">' +
+                '<div>' +
+                '<strong class="d-block">Order ' + orderNum + '</strong>' +
+                '<small class="text-muted">' + itemsCount + ' item' + (itemsCount !== 1 ? 's' : '') + ' &middot; ₦' + Number(amount).toFixed(2) + '</small>' +
+                '</div>' +
+                '<span class="status-badge ' + statusClass + '">' + statusText + '</span>' +
+                '</div>';
+        });
+        listEl.innerHTML = html;
+    }
+
+    // ── Update orders count badges ──
+    function updateOrderCounts(orders) {
+        if (!orders || !Array.isArray(orders)) return;
+
+        var total = orders.length;
+        var pending = orders.filter(function(o) { return o.status === 'pending' || o.status === 'processing'; }).length;
+        var completed = orders.filter(function(o) { return o.status === 'delivered' || o.status === 'completed'; }).length;
+
+        var totalOrders = $('totalOrders');
+        if (totalOrders) totalOrders.textContent = total;
+        var pendingOrders = $('pendingOrders');
+        if (pendingOrders) pendingOrders.textContent = pending;
+        var completedOrders = $('completedOrders');
+        if (completedOrders) completedOrders.textContent = completed;
+
+        var totalBadge = $('totalOrdersBadge');
+        if (totalBadge) totalBadge.textContent = total + ' Order' + (total !== 1 ? 's' : '');
+        var pendingBadge = $('pendingOrdersBadge');
+        if (pendingBadge) pendingBadge.textContent = pending + ' Pending';
+    }
+
+    // ── Show error banner ──
+    function showError(message, retryCallback) {
+        clearSlowLoadTimer();
+        var banner = $('errorBanner');
+        if (!banner) return;
+
+        var html = '<h5 class="fw-bold mb-2"><i class="fas fa-exclamation-triangle text-warning me-2"></i>Something went wrong</h5>' +
+            '<p class="mb-3">' + message + '</p>';
+        if (typeof retryCallback === 'function') {
+            html += '<button class="btn btn-warning" id="retryBtn"><i class="fas fa-sync me-2"></i>Retry</button>';
+        }
+        banner.innerHTML = html;
+        banner.style.display = 'block';
+
+        if (typeof retryCallback === 'function') {
+            var retryBtn = document.getElementById('retryBtn');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', function() {
+                    banner.style.display = 'none';
+                    retryCallback();
+                });
+            }
+        }
+    }
+
+    // ── Save profile ──
+    async function saveProfile() {
+        var btn = $('saveProfileBtn');
+        if (!btn) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+        try {
+            var data = {
+                fullName: ($('editName') ? $('editName').value : '') || undefined,
+                phone: ($('editPhone') ? $('editPhone').value : '') || undefined,
+                address: ($('editAddress') ? $('editAddress').value : '') || undefined,
+                city: ($('editCity') ? $('editCity').value : '') || undefined,
+                state: ($('editState') ? $('editState').value : '') || undefined,
+                zipCode: ($('editZip') ? $('editZip').value : '') || undefined,
+                country: ($('editCountry') ? $('editCountry').value : '') || undefined,
+            };
+
+            var result = await fetchWithTimeout(
+                api.updateProfile(data),
+                REQUEST_TIMEOUT_MS
+            );
+
+            console.log('Profile saved successfully');
+
+            // Switch to profile tab
+            var profileTab = $('profileTabBtn');
+            if (profileTab) profileTab.click();
+
+            // Refresh profile data
+            var freshProfile = await fetchFreshProfile();
+            if (freshProfile && !freshProfile._error) {
+                renderProfile(freshProfile);
+                renderNavbar(freshProfile);
+                $('greetingName').textContent = freshProfile.fullName || 'User';
+            }
+
+            if (typeof cartManager !== 'undefined' && cartManager.showToast) {
+                cartManager.showToast('Profile updated successfully!', 'success');
+            } else {
+                alert('Profile updated successfully!');
+            }
+        } catch (err) {
+            console.error('Profile save failed:', err.message || err);
+            if (typeof cartManager !== 'undefined' && cartManager.showToast) {
+                var msg = err.name === 'AbortError' ? 'Request timed out. Please try again.' : (err.message || 'Could not save profile.');
+                cartManager.showToast(msg, 'error');
+            } else {
+                alert('Could not save profile.');
+            }
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save me-2"></i>Save Changes';
+        }
+    }
+
+    // ── Determine error message from error object ──
+    function getErrorMessage(errorResult) {
+        if (!errorResult || !errorResult._error) return 'Something went wrong. Please refresh the page.';
+        switch (errorResult._error) {
+            case 'timeout': return 'Server is not responding. Please try again.';
+            case 'unauthorized':
+                console.log('Unauthorized — logging out');
+                auth.logout();
+                window.location.href = 'login.html';
+                return 'Session expired. Redirecting to login...';
+            case 'network': return 'No internet connection. Please check your network.';
+            default: return 'Something went wrong. Please refresh the page.';
+        }
+    }
+
+    // ── Main init ──
+    async function init() {
+        console.log('Dashboard page loading...');
+
+        // Step 1: Attach click handlers immediately
+        attachEventListeners();
+
+        // Step 2: Check auth
+        if (!checkAuth()) return;
+
+        // Step 3: Show cached data immediately
+        loadCachedProfile();
+
+        // Step 4: Start slow load timer
+        startSlowLoadTimer();
+
+        // Step 5: Fetch fresh data in parallel
+        console.log('Fetching fresh profile and orders in parallel...');
+        var results = await Promise.allSettled([
+            fetchFreshProfile(),
+            fetchOrders()
+        ]);
+
+        clearSlowLoadTimer();
+
+        // Process profile result
+        var profileResult = results[0];
+        if (profileResult.status === 'fulfilled' && profileResult.value && !profileResult.value._error) {
+            renderProfile(profileResult.value);
+            renderNavbar(profileResult.value);
+            if ($('greetingName')) $('greetingName').textContent = profileResult.value.fullName || 'User';
+        } else if (profileResult.status === 'fulfilled' && profileResult.value && profileResult.value._error === 'unauthorized') {
+            return; // getErrorMessage already redirected
+        } else if (profileResult.status === 'fulfilled' && profileResult.value && profileResult.value._error) {
+            showError(getErrorMessage(profileResult.value), function() {
+                init();
+            });
+        } else {
+            console.error('Unexpected profile fetch error');
+            showError('Could not load your dashboard.', function() {
+                init();
+            });
+        }
+
+        // Process orders result
+        var ordersResult = results[1];
+        if (ordersResult.status === 'fulfilled' && ordersResult.value && !ordersResult.value._error) {
+            var orders = ordersResult.value;
+            // If orders is wrapped in {orders: [...]} object, extract
+            if (orders && orders.orders && Array.isArray(orders.orders)) {
+                orders = orders.orders;
+            }
+            renderOrders(orders);
+            updateOrderCounts(orders);
+        } else if (ordersResult.status === 'fulfilled' && ordersResult.value && ordersResult.value._error) {
+            if (ordersResult.value._error !== 'unauthorized') {
+                console.warn('Orders failed but profile loaded:', ordersResult.value._error);
+                var ordersPlaceholder = $('noOrdersPlaceholder');
+                if (ordersPlaceholder) ordersPlaceholder.style.display = 'block';
+            }
+        } else {
+            console.warn('Unexpected orders fetch error');
+            var ordersPlaceholder = $('noOrdersPlaceholder');
+            if (ordersPlaceholder) ordersPlaceholder.style.display = 'block';
+        }
+
+        pageLoaded = true;
+        console.log('Dashboard page loaded successfully.');
+    }
+
+    // ── Start when DOM ready ──
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
 </body>
 </html>
