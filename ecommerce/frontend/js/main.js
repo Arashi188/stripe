@@ -488,32 +488,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (page === 'my-account.html' || page === 'user-dashboard.html') {
         // my-account.html has its own self-contained script
     }
-                }
-            } catch (error) {
-                cartManager.showToast(error.message, 'error');
-            }
-        };
-        loadDashboard();
-
-        document.getElementById('profileForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                await api.updateProfile({
-                    fullName: document.getElementById('editName').value,
-                    phone: document.getElementById('editPhone').value,
-                    address: document.getElementById('editAddress').value,
-                    city: document.getElementById('editCity').value,
-                    state: document.getElementById('editState').value,
-                    zipCode: document.getElementById('editZip').value,
-                    country: document.getElementById('editCountry').value,
-                });
-                cartManager.showToast('Profile updated!', 'success');
-                loadDashboard();
-            } catch (error) {
-                cartManager.showToast(error.message, 'error');
-            }
-        });
-    }
 
     if (page === 'order-history.html') {
         auth.redirectIfNotLoggedIn();
