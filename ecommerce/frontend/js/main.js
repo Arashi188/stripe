@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             container.innerHTML = products.map(product => `
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4 product-card-3d">
+                <div class="col-6 col-lg-3 col-md-4 col-sm-6 mb-4 product-card-3d">
                     <div class="product-card">
                         <div class="product-image">
                             <img src="${resolveImageUrl(product.imageUrl) || 'https://via.placeholder.com/300x400'}" 

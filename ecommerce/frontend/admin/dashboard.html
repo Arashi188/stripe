@@ -11,13 +11,21 @@
 </head>
 <body>
 
+<div class="admin-overlay" id="adminOverlay"></div>
+<button class="admin-sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+</button>
+
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
         <div class="col-lg-2 col-md-3 p-0">
-            <div class="admin-sidebar">
+            <div class="admin-sidebar" id="adminSidebar">
+                <div class="d-md-none text-end mb-2">
+                    <button class="btn btn-sm text-white-50 border-0" id="sidebarCloseBtn"><i class="fas fa-times fs-5"></i></button>
+                </div>
                 <div class="text-center mb-4">
-                    <a href="../index.html" class="navbar-brand d-block mb-3"><img src="../images/logo.png" alt="GREAT WALL intl" height="32"></a>
+                    <a href="../index.html" class="navbar-brand d-block mb-3"><img src="../images/logo.png" alt="GREAT WALL intl" height="32" loading="lazy"></a>
                     <small class="text-white-50">Admin Panel</small>
                 </div>
                 <hr class="border-light opacity-25">
@@ -545,6 +553,19 @@
 <script src="../js/admin.js"></script>
 <script>
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+// Sidebar toggle for mobile
+const sidebar = document.getElementById('adminSidebar');
+const overlay = document.getElementById('adminOverlay');
+function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('show'); }
+function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+document.getElementById('sidebarToggle').addEventListener('click', openSidebar);
+document.getElementById('sidebarCloseBtn').addEventListener('click', closeSidebar);
+overlay.addEventListener('click', closeSidebar);
+// Close sidebar on nav link click (mobile)
+document.querySelectorAll('.admin-sidebar .nav-link').forEach(function(link) {
+    link.addEventListener('click', function() { if (window.innerWidth < 992) closeSidebar(); });
+});
 </script>
 </body>
 </html>
