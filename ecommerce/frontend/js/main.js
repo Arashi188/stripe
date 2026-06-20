@@ -485,70 +485,9 @@ document.addEventListener('DOMContentLoaded', () => {
         loadProductDetails();
     }
 
-    if (page === 'user-dashboard.html') {
-        auth.redirectIfNotLoggedIn();
-        const loadDashboard = async () => {
-            try {
-                const profile = await api.getProfile();
-                const orders = await api.getOrderHistory();
-                const wishlist = await api.getWishlist();
-
-                const initials = (profile.fullName || 'U').charAt(0).toUpperCase();
-                const completed = orders.filter(o => o.status === 'DELIVERED' || o.status === 'COMPLETED').length;
-
-                document.querySelectorAll('#userName, #greetingName, #profileName, #viewName').forEach(el => el.textContent = profile.fullName || 'User');
-                document.querySelectorAll('#userAvatar, #avatarInitials').forEach(el => el.textContent = initials);
-                document.querySelectorAll('#userEmail, #viewEmail, #profileEmail').forEach(el => el.textContent = profile.email || '-');
-
-                const phone = profile.phone || '-';
-                document.querySelectorAll('#userPhone, #viewPhone').forEach(el => el.textContent = phone);
-                const phoneEl = document.getElementById('profilePhone');
-                if (phoneEl) phoneEl.innerHTML = `<i class="fas fa-phone me-1"></i>${phone}`;
-
-                document.getElementById('totalOrders').textContent = orders.length;
-                document.getElementById('totalOrdersBadge').textContent = orders.length + ' Orders';
-                document.getElementById('wishlistCount').textContent = wishlist.length;
-                document.getElementById('pendingOrders').textContent = orders.filter(o => o.status === 'PENDING').length;
-                document.getElementById('pendingOrdersBadge').textContent = orders.filter(o => o.status === 'PENDING').length + ' Pending';
-                document.getElementById('completedOrders').textContent = completed;
-
-                const viewFields = { address: 'viewAddress', city: 'viewCity', state: 'viewState', zipCode: 'viewZip' };
-                Object.entries(viewFields).forEach(([key, id]) => {
-                    const el = document.getElementById(id);
-                    if (el) el.textContent = profile[key] || '-';
-                });
-
-                const editFields = { fullName: 'editName', phone: 'editPhone', address: 'editAddress', city: 'editCity', state: 'editState', zipCode: 'editZip', country: 'editCountry' };
-                Object.entries(editFields).forEach(([key, id]) => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = profile[key] || '';
-                });
-
-                const recentContainer = document.getElementById('recentOrdersList');
-                if (recentContainer) {
-                    const recentOrders = orders.slice(0, 3);
-                    if (recentOrders.length === 0) {
-                        recentContainer.innerHTML = `
-                            <div class="text-center text-muted py-4">
-                                <i class="fas fa-box-open fa-2x mb-2 d-block"></i>
-                                <span>No orders yet</span>
-                            </div>`;
-                    } else {
-                        recentContainer.innerHTML = recentOrders.map(o => `
-                            <div class="recent-order-item">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <strong class="d-block">#${o.orderNumber}</strong>
-                                        <small class="text-muted">${new Date(o.createdAt).toLocaleDateString()}</small>
-                                    </div>
-                                    <div class="text-end">
-                                        <span class="badge rounded-pill status-${o.status.toLowerCase()}">${o.status}</span>
-                                        <div class="fw-bold mt-1 text-primary">₦${o.totalAmount.toFixed(2)}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('');
-                    }
+    if (page === 'my-account.html' || page === 'user-dashboard.html') {
+        // my-account.html has its own self-contained script
+    }
                 }
             } catch (error) {
                 cartManager.showToast(error.message, 'error');
