@@ -1980,3 +1980,53 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
     width: 46px;
     font-size: 1.1rem;
 }
+
+/* ── Icon picker ── */
+.icon-preview {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d6efd, #6f42c1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 1.5rem;
+    color: #fff;
+}
+.icon-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+}
+.icon-option {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: #495057;
+    background: #f8f9fa;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.icon-option:hover {
+    background: #e9ecef;
+    color: #0d6efd;
+}
+.icon-option.active {
+    border-color: #0d6efd;
+    background: #e8f0fe;
+    color: #0d6efd;
+}
+
+/* Avatar icon styling */
+.user-avatar i {
+    font-size: 0.9rem;
+    color: #fff;
+    line-height: 1;
+}

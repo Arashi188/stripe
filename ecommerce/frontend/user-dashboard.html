@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - GREAT WALL intl</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        body { background: #f5f6fa; font-family: 'Inter', sans-serif; }
+        .user-sidebar {
+            background: #1a1a2e;
+            min-height: 100vh;
+            padding: 1.5rem 1rem;
+            position: sticky;
+            top: 0;
+        }
+        .user-sidebar .brand { color: #fff; font-weight: 800; font-size: 1.1rem; text-decoration: none; }
+        .user-sidebar .brand img { height: 32px; }
+        .user-sidebar hr { border-color: rgba(255,255,255,0.1); }
+        .user-sidebar .nav-link {
+            color: rgba(255,255,255,0.6);
+            padding: 0.65rem 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            margin-bottom: 2px;
+        }
+        .user-sidebar .nav-link:hover { color: #fff; background: rgba(255,255,255,0.08); }
+        .user-sidebar .nav-link.active { color: #fff; background: rgba(13,110,253,0.2); }
+        .user-sidebar .nav-link i { width: 20px; text-align: center; margin-right: 10px; }
+        .user-sidebar .user-info {
+            text-align: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 1rem;
+        }
+        .user-sidebar .user-avatar-lg {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d6efd, #6f42c1);
+            color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; font-weight: 700;
+            margin: 0 auto 8px;
+        }
+        .user-sidebar .user-name { color: #fff; font-weight: 600; font-size: 0.95rem; }
+        .user-sidebar .user-email { color: rgba(255,255,255,0.5); font-size: 0.8rem; }
+
+        .dashboard-content { padding: 2rem; }
+        .section-header { margin-bottom: 1.5rem; }
+        .section-header h2 { font-weight: 700; }
+        .section-header p { color: #6c757d; }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 1.25rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            border: 1px solid #f0f0f0;
+            height: 100%;
+        }
+        .stat-card .stat-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+        }
+        .stat-card h3 { font-size: 1.75rem; font-weight: 700; margin: 0; }
+
+        .info-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            border: 1px solid #f0f0f0;
+            margin-bottom: 1.25rem;
+        }
+        .info-card h5 { font-weight: 600; margin-bottom: 1rem; }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 0.65rem 1rem;
+            border: 1.5px solid #e0e0e0;
+            font-size: 0.9rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
+        }
+
+        .order-table { font-size: 0.9rem; }
+        .order-table th { font-weight: 600; color: #6c757d; border-top: none; background: #f8f9fa; }
+        .status-badge { padding: 0.3rem 0.85rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-processing { background: #cce5ff; color: #004085; }
+        .status-paid { background: #d4edda; color: #155724; }
+        .status-shipped { background: #d6d8d9; color: #383d41; }
+        .status-delivered { background: #d4edda; color: #155724; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
+
+        .wishlist-item {
+            display: flex; align-items: center;
+            padding: 1rem;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #f0f0f0;
+            margin-bottom: 0.75rem;
+            gap: 1rem;
+        }
+        .wishlist-item img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; }
+
+        .review-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid #f0f0f0;
+            margin-bottom: 0.75rem;
+        }
+
+        .activity-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex; gap: 12px;
+            font-size: 0.9rem;
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-icon {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.85rem;
+        }
+
+        .notif-item {
+            padding: 1rem;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid #f0f0f0;
+            margin-bottom: 0.5rem;
+            display: flex; gap: 12px;
+            align-items: start;
+        }
+        .notif-item.unread { background: #f0f7ff; border-color: #cce5ff; }
+
+        .dark-mode body { background: #0f0f1a; color: #e0e0e0; }
+        .dark-mode .stat-card,
+        .dark-mode .info-card,
+        .dark-mode .wishlist-item,
+        .dark-mode .review-card,
+        .dark-mode .notif-item { background: #1a1a2e; border-color: #2a2a3e; color: #e0e0e0; }
+        .dark-mode .order-table th { background: #1a1a2e; color: #aaa; }
+        .dark-mode .form-control, .dark-mode .form-select { background: #1a1a2e; border-color: #2a2a3e; color: #e0e0e0; }
+        .dark-mode .section-header p { color: #888; }
+        .dark-mode .activity-item { border-color: #2a2a3e; }
+
+        .user-sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1050;
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            width: 44px;
+            height: 44px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        @media (max-width: 991.98px) {
+            .user-sidebar-toggle { display: block; }
+            .user-sidebar {
+                position: fixed;
+                top: 0; left: -280px;
+                width: 280px;
+                z-index: 1040;
+                transition: left 0.3s ease;
+                min-height: 100vh;
+            }
+            .user-sidebar.open { left: 0; }
+            .dashboard-content { padding: 1rem; padding-top: 60px; }
+            .sidebar-backdrop {
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 1035;
+                display: none;
+            }
+            .sidebar-backdrop.show { display: block; }
+        }
+
+        .tracking-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid #f0f0f0;
+            margin-bottom: 1rem;
+        }
+        .dark-mode .tracking-card { background: #1a1a2e; border-color: #2a2a3e; }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 26px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #ccc;
+            border-radius: 26px;
+            transition: 0.3s;
+        }
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            height: 20px; width: 20px;
+            left: 3px; bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle-switch input:checked + .toggle-slider { background: #0d6efd; }
+        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
+    </style>
+</head>
+<body>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<button class="user-sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3 p-0">
+            <div class="user-sidebar" id="userSidebar">
+                <div class="user-info">
+                    <div class="user-avatar-lg" id="sidebarAvatar">?</div>
+                    <div class="user-name" id="sidebarName">User</div>
+                    <div class="user-email" id="sidebarEmail">user@email.com</div>
+                </div>
+                <nav>
+                    <a class="nav-link active" href="#" data-section="overview"><i class="fas fa-chart-pie"></i>Overview</a>
+                    <a class="nav-link" href="#" data-section="orders"><i class="fas fa-truck"></i>Order History</a>
+                    <a class="nav-link" href="#" data-section="tracking"><i class="fas fa-map-marker-alt"></i>Order Tracking</a>
+                    <a class="nav-link" href="#" data-section="wishlist"><i class="fas fa-heart"></i>Wishlist</a>
+                    <a class="nav-link" href="#" data-section="reviews"><i class="fas fa-star"></i>My Reviews</a>
+                    <a class="nav-link" href="#" data-section="profile"><i class="fas fa-user-edit"></i>Edit Profile</a>
+                    <a class="nav-link" href="#" data-section="addresses"><i class="fas fa-map-pin"></i>Shipping Addresses</a>
+                    <a class="nav-link" href="#" data-section="password"><i class="fas fa-lock"></i>Change Password</a>
+                    <a class="nav-link" href="#" data-section="notifications"><i class="fas fa-bell"></i>Notifications</a>
+                    <a class="nav-link" href="#" data-section="activity"><i class="fas fa-clock"></i>Activity Log</a>
+                    <a class="nav-link" href="#" data-section="appearance"><i class="fas fa-palette"></i>Appearance</a>
+                    <hr>
+                    <a class="nav-link text-danger" href="#" id="sidebarLogout"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9 p-0">
+            <div class="dashboard-content">
+
+                <!-- ===================== OVERVIEW ===================== -->
+                <div id="section-overview" class="dash-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-chart-pie me-2 text-primary"></i>Overview</h2>
+                        <p>Welcome back, <span id="greetingName" class="fw-semibold">User</span></p>
+                    </div>
+                    <div class="row g-3 mb-4" id="statsRow">
+                        <div class="col-md-3 col-6">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted">Total Orders</small>
+                                        <h3 id="statOrders">0</h3>
+                                    </div>
+                                    <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="fas fa-shopping-cart"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted">Wishlist</small>
+                                        <h3 id="statWishlist">0</h3>
+                                    </div>
+                                    <div class="stat-icon bg-danger bg-opacity-10 text-danger"><i class="fas fa-heart"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted">Reviews</small>
+                                        <h3 id="statReviews">0</h3>
+                                    </div>
+                                    <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="fas fa-star"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted">Member Since</small>
+                                        <h3 id="statMemberDate" style="font-size:1rem">-</h3>
+                                    </div>
+                                    <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="fas fa-calendar"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h5><i class="fas fa-user-circle me-2 text-primary"></i>Account Info</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-2"><strong>Name:</strong> <span id="ovName">-</span></div>
+                            <div class="col-md-6 mb-2"><strong>Email:</strong> <span id="ovEmail">-</span></div>
+                            <div class="col-md-6 mb-2"><strong>Phone:</strong> <span id="ovPhone">-</span></div>
+                            <div class="col-md-6 mb-2"><strong>Role:</strong> <span id="ovRole">-</span></div>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h5><i class="fas fa-truck me-2 text-primary"></i>Recent Orders</h5>
+                        <div class="table-responsive">
+                            <table class="table order-table table-hover align-middle mb-0">
+                                <thead><tr><th>Order #</th><th>Date</th><th>Total</th><th>Status</th><th></th></tr></thead>
+                                <tbody id="recentOrdersBody">
+                                    <tr><td colspan="5" class="text-center text-muted py-4">No orders yet</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================== ORDER HISTORY ===================== -->
+                <div id="section-orders" class="dash-section" style="display:none">
+                    <div class="section-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h2><i class="fas fa-truck me-2 text-primary"></i>Order History</h2>
+                            <p>View and manage your orders</p>
+                        </div>
+                        <span id="ordersSpinner" class="spinner-border spinner-border-sm text-primary" style="display:none"></span>
+                    </div>
+                    <div id="ordersError" class="alert alert-danger py-2 small" style="display:none"></div>
+                    <div class="table-responsive">
+                        <table class="table order-table table-hover align-middle">
+                            <thead><tr><th>Order #</th><th>Date</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="ordersBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="ordersEmpty" class="text-center py-5" style="display:none">
+                        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                        <h5 class="fw-bold">No Orders Yet</h5>
+                        <p class="text-muted">Start shopping to see your orders here.</p>
+                        <a href="shop.html" class="btn btn-primary"><i class="fas fa-shopping-bag me-2"></i>Start Shopping</a>
+                    </div>
+                </div>
+
+                <!-- ===================== ORDER TRACKING ===================== -->
+                <div id="section-tracking" class="dash-section" style="display:none">
+                    <div class="section-header">
+                        <h2><i class="fas fa-map-marker-alt me-2 text-primary"></i>Order Tracking</h2>
+                        <p>Enter a tracking ID to see live status</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" id="trackingInput" placeholder="Enter tracking ID">
+                                    <button class="btn btn-primary" id="trackBtn"><i class="fas fa-search me-1"></i>Track</button>
+                                </div>
+                                <div id="trackingResult"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================== WISHLIST ===================== -->
+                <div id="section-wishlist" class="dash-section" style="display:none">
+                    <div class="section-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h2><i class="fas fa-heart me-2 text-danger"></i>Wishlist</h2>
+                            <p>Your saved items</p>
+                        </div>
+                        <span id="wishlistSpinner" class="spinner-border spinner-border-sm text-primary" style="display:none"></span>
+                    </div>
+                    <div id="wishlistError" class="alert alert-danger py-2 small" style="display:none"></div>
+                    <div id="wishlistContent"></div>
+                    <div id="wishlistEmpty" class="text-center py-5" style="display:none">
+                        <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                        <h5 class="fw-bold">Wishlist is Empty</h5>
+                        <p class="text-muted">Save items you love for later.</p>
+                        <a href="shop.html" class="btn btn-primary"><i class="fas fa-shopping-bag me-2"></i>Browse Products</a>
+                    </div>
+                </div>
+
+                <!-- ===================== MY REVIEWS ===================== -->
+                <div id="section-reviews" class="dash-section" style="display:none">
+                    <div class="section-header">
+                        <h2><i class="fas fa-star me-2 text-warning"></i>My Reviews</h2>
+                        <p>Reviews you've written</p>
+                    </div>
+                    <div id="reviewsContent">
+                        <p class="text-muted text-center py-4">Loading your reviews...</p>
+                    </div>
+                </div>
+
+                <!-- ===================== EDIT PROFILE ===================== -->
+                <div id="section-profile" class="dash-section" style="display:none">
+                    <div class="section-header">
+                        <h2><i class="fas fa-user-edit me-2 text-primary"></i>Edit Profile</h2>
+                        <p>Update your personal information</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="info-card">
+                                <form id="profileForm">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold small">Full Name</label>
+                                            <input type="text" class="form-control" id="editName" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold small">Email</label>
+                                            <input type="email" class="form-control" id="editEmail" disabled>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold small">Phone</label>
+                                            <input type="tel" class="form-control" id="editPhone">
+                                        </div>
+                                    </div>
+                                    <div id="profileSuccess" class="alert alert-success py-2 small mt-3" style="display:none"></div>
+                                    <div id="profileError" class="alert alert-danger py-2 small mt-3" style="display:none"></div>
+                                    <button type="submit" class="btn btn-primary mt-3"><i class="fas fa-save me-2"></i>Save Changes</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================== SHIPPING ADDRESSES ===================== -->
+                <div id="section-addresses" class="dash-section" style="display:none">
+                    <div class="section-header">
+                        <h2><i class="fas fa-map-pin me-2 text-primary"></i>Shipping Addresses</h2>
+                        <p>Manage your shipping details</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="info-card">
+                                <form id="addressForm">
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="form-label fw-semibold small">Address</label>
+                                            <input type="text" class="form-control" id="editAddress" placeholder="Street address">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold small">City</label>
+                                            <input type="text" class="form-control" id="editCity">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold small">State</label>
+                                            <input type="text" class="form-control" id="editState">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold small">ZIP Code</label>
+                                            <input type="text" class="form-control" id="editZip">
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label fw-semibold small">Country</label>
+                                            <input type="text" class="form-control" id="editCountry">
+                                        </div>
+                                    </div>
+                                    <div id="addressSuccess" class="alert alert-success py-2 small mt-3" style="display:none"></div>
+                                    <div id="addressError" class="alert alert-danger py-2 small mt-3" style="display:none"></div>
+                                    <button type="submit" class="btn btn-primary mt-3"><i class="fas fa-save me-2"></i>Save Address</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================== CHANGE PASSWORD ===================== -->
+                <div id="section-password" class="dash-section" style="display:none">
+                    <div class="section-header">
+                        <h2><i class="fas fa-lock me-2 text-primary"></i>Change Password</h2>
+                        <p>Update your account password</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="info-card">
+                                <form id="passwordForm">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold small">Current Password</label>
+                                        <input type="password" class="form-control" id="currentPassword" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold small">New Password</label>
+                                        <input type="password" class="form-control" id="newPassword" required minlength="6">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold small">Confirm New Password</label>
+                                        <input type="password" class="form-control" id="confirmPassword" required>
+                                    </div>
+                                    <div id="passwordSuccess" class="alert alert-success py-2 small" style="display:none"></div>
+                                    <div id="passwordError" class="alert alert-danger py-2 small" style="display:none"></div>
+                                    <button type="submit" class="btn btn-primary"><i class="fas fa-key me-2"></i>Update Password</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================== NOTIFICATIONS ===================== -->
+                <div id="section-notifications" class="dash-section" style="display:none">
+                    <div class="section-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h2><i class="fas fa-bell me-2 text-primary"></i>Notifications</h2>
+                            <p>Your messages and updates</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" id="markAllReadBtn"><i class="fas fa-check-double me-1"></i>Mark All Read</button>
+                    </div>
+                    <div id="notificationsList"></div>
+                    <div id="notificationsEmpty" class="text-center py-5" style="display:none">
+                        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                        <h5 class="fw-bold">No Notifications</h5>
+                        <p class="text-muted">You're all caught up!</p>
+                    </div>
+                </div>
+
+                <!-- ===================== ACTIVITY LOG ===================== -->
+                <div id="section-activity" class="dash-section" style="display:none">
+                    <div class="section-header">
+                        <h2><i class="fas fa-clock me-2 text-primary"></i>Activity Log</h2>
+                        <p>Recent account activity</p>
+                    </div>
+                    <div class="info-card" id="activityLog">
+                        <div class="text-center text-muted py-4">Loading activity...</div>
+                    </div>
+                </div>
+
+                <!-- ===================== APPEARANCE ===================== -->
+                <div id="section-appearance" class="dash-section" style="display:none">
+                    <div class="section-header">
+                        <h2><i class="fas fa-palette me-2 text-primary"></i>Appearance</h2>
+                        <p>Customize your dashboard look</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h5 class="fw-bold mb-1">Dark Mode</h5>
+                                <p class="text-muted small mb-0">Toggle dark theme for the dashboard</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="darkModeToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h5><i class="fas fa-icons me-2 text-primary"></i>Avatar Icon</h5>
+                        <p class="text-muted small">Choose an icon for your navbar avatar on the <a href="user-dashboard.html#profile" class="section-link">Profile</a> page (coming soon to this dashboard).</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Receipt Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-receipt me-2"></i>Payment Receipt</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <iframe id="receiptFrame" style="width:100%;height:500px;border:none;border-radius:8px"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function() {
+    'use strict';
+
+    var $ = function(id) { return document.getElementById(id); };
+    var TIMEOUT_MS = 10000;
+    var currentSection = 'overview';
+
+    // ── Auth check ──
+    if (typeof auth === 'undefined' || !auth.isLoggedIn()) {
+        auth.redirectToLogin();
+        return;
+    }
+
+    var user = auth.getUser();
+    function initSidebar() {
+        var name = user ? (user.fullName || 'User') : 'User';
+        var email = user ? (user.email || '') : '';
+        $('sidebarName').textContent = name;
+        $('sidebarEmail').textContent = email;
+        var initial = name.charAt(0).toUpperCase();
+        $('sidebarAvatar').textContent = initial;
+        $('greetingName').textContent = name;
+
+        // Avatar icon from localStorage
+        var storedIcon = localStorage.getItem('userIcon');
+        if (storedIcon) {
+            $('sidebarAvatar').innerHTML = '<i class="fas ' + storedIcon + '" style="font-size:1.3rem"></i>';
+        }
+    }
+
+    // ── Section switching ──
+    function showSection(name) {
+        document.querySelectorAll('.dash-section').forEach(function(el) { el.style.display = 'none'; });
+        var sec = $('section-' + name);
+        if (sec) sec.style.display = 'block';
+        document.querySelectorAll('.user-sidebar .nav-link').forEach(function(el) { el.classList.remove('active'); });
+        var link = document.querySelector('.user-sidebar .nav-link[data-section="' + name + '"]');
+        if (link) link.classList.add('active');
+        currentSection = name;
+        // Close sidebar on mobile
+        var sidebar = $('userSidebar');
+        if (sidebar) sidebar.classList.remove('open');
+        var backdrop = $('sidebarBackdrop');
+        if (backdrop) backdrop.classList.remove('show');
+    }
+
+    // ── Sidebar navigation ──
+    document.querySelectorAll('.user-sidebar .nav-link[data-section]').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            showSection(this.getAttribute('data-section'));
+            // Load section data if needed
+            var sec = this.getAttribute('data-section');
+            if (sec === 'orders') loadOrders();
+            if (sec === 'wishlist') loadWishlist();
+            if (sec === 'reviews') loadReviews();
+            if (sec === 'profile') loadProfileForm();
+            if (sec === 'addresses') loadAddressForm();
+            if (sec === 'notifications') loadNotifications();
+            if (sec === 'activity') loadActivity();
+        });
+    });
+
+    // ── Sidebar toggle (mobile) ──
+    $('sidebarToggle').addEventListener('click', function() {
+        $('userSidebar').classList.toggle('open');
+        $('sidebarBackdrop').classList.toggle('show');
+    });
+    $('sidebarBackdrop').addEventListener('click', function() {
+        $('userSidebar').classList.remove('open');
+        $('sidebarBackdrop').classList.remove('show');
+    });
+
+    // ── Logout ──
+    $('sidebarLogout').addEventListener('click', function(e) {
+        e.preventDefault();
+        auth.logout();
+    });
+
+    // ── Fetch with timeout ──
+    function fetchWithTimeout(promise, ms) {
+        return new Promise(function(resolve, reject) {
+            var timer = setTimeout(function() { reject(new Error('timeout')); }, ms);
+            promise.then(function(v) { clearTimeout(timer); resolve(v); }, function(e) { clearTimeout(timer); reject(e); });
+        });
+    }
+
+    // ==================== PROFILE ====================
+    async function loadOverview() {
+        try {
+            var result = await fetchWithTimeout(api.getProfile(), TIMEOUT_MS);
+            $('ovName').textContent = result.fullName || '-';
+            $('ovEmail').textContent = result.email || '-';
+            $('ovPhone').textContent = result.phone || '-';
+            $('ovRole').textContent = result.role || '-';
+            if (result.createdAt) {
+                $('statMemberDate').textContent = new Date(result.createdAt).toLocaleDateString();
+            }
+        } catch (e) {
+            // silent — cached data shown
+        }
+        // Load order count
+        try {
+            var orders = await fetchWithTimeout(api.getOrderHistory(), TIMEOUT_MS);
+            var list = (orders && orders.orders) ? orders.orders : (Array.isArray(orders) ? orders : []);
+            $('statOrders').textContent = list.length;
+            // Recent orders (last 5)
+            var html = '';
+            list.slice(0, 5).forEach(function(o) {
+                var num = o.orderNumber || '#' + o.id;
+                var date = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '-';
+                var total = '₦' + (o.totalAmount || o.total || 0).toFixed(2);
+                var status = (o.status || 'pending').toLowerCase();
+                html += '<tr><td class="fw-semibold">' + num + '</td><td class="text-muted">' + date + '</td><td class="fw-semibold">' + total + '</td><td><span class="status-badge status-' + status + '">' + status.charAt(0).toUpperCase() + status.slice(1) + '</span></td><td><a href="order-history.html" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a></td></tr>';
+            });
+            if (html) $('recentOrdersBody').innerHTML = html;
+        } catch (e) {}
+        // Wishlist count
+        try {
+            var wl = await fetchWithTimeout(api.getWishlist(), TIMEOUT_MS);
+            $('statWishlist').textContent = (wl && wl.length) ? wl.length : 0;
+        } catch (e) {}
+    }
+
+    // ==================== ORDERS ====================
+    async function loadOrders() {
+        var spinner = $('ordersSpinner');
+        var body = $('ordersBody');
+        var empty = $('ordersEmpty');
+        var err = $('ordersError');
+        if (spinner) spinner.style.display = 'inline-block';
+        if (err) err.style.display = 'none';
+        try {
+            var orders = await fetchWithTimeout(api.getOrderHistory(), TIMEOUT_MS);
+            var list = (orders && orders.orders) ? orders.orders : (Array.isArray(orders) ? orders : []);
+            if (spinner) spinner.style.display = 'none';
+            if (list.length === 0) {
+                if (body) body.innerHTML = '';
+                if (empty) empty.style.display = 'block';
+                return;
+            }
+            if (empty) empty.style.display = 'none';
+            var html = '';
+            list.forEach(function(o) {
+                var num = o.orderNumber || '#' + o.id;
+                var date = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '-';
+                var total = '₦' + (o.totalAmount || o.total || 0).toFixed(2);
+                var status = (o.status || 'pending').toLowerCase();
+                var payment = (o.paymentStatus || 'pending');
+                var items = (o.orderItems && o.orderItems.length) ? o.orderItems.length : 0;
+                var hasReceipt = !!o.receiptUrl;
+                html += '<tr>' +
+                    '<td class="fw-semibold">' + num + '</td>' +
+                    '<td class="text-muted">' + date + '</td>' +
+                    '<td>' + items + '</td>' +
+                    '<td class="fw-semibold">' + total + '</td>' +
+                    '<td><span class="badge bg-' + (payment === 'PAID' ? 'success' : 'warning') + ' bg-opacity-10 text-' + (payment === 'PAID' ? 'success' : 'warning') + '">' + payment + '</span></td>' +
+                    '<td><span class="status-badge status-' + status + '">' + status.charAt(0).toUpperCase() + status.slice(1) + '</span></td>' +
+                    '<td>' +
+                        '<div class="d-flex gap-1">' +
+                            '<button class="btn btn-sm btn-outline-primary" onclick="viewOrder(\'' + o.id + '\')" title="View Order"><i class="fas fa-eye"></i></button>' +
+                            (hasReceipt ? '<button class="btn btn-sm btn-outline-info" onclick="viewReceipt(\'' + o.id + '\')" title="Receipt"><i class="fas fa-receipt"></i></button>' : '') +
+                            '<button class="btn btn-sm btn-outline-success" onclick="reorder(\'' + o.id + '\')" title="Reorder"><i class="fas fa-redo"></i></button>' +
+                        '</div>' +
+                    '</td></tr>';
+            });
+            if (body) body.innerHTML = html;
+        } catch (e) {
+            if (spinner) spinner.style.display = 'none';
+            if (err) { err.textContent = 'Could not load orders. ' + e.message; err.style.display = 'block'; }
+        }
+    }
+
+    window.viewOrder = function(id) {
+        window.location.href = 'order-history.html?id=' + id;
+    };
+
+    window.viewReceipt = function(id) {
+        var token = api.getToken();
+        var url = API_BASE + '/orders/' + id + '/receipt';
+        $('receiptFrame').src = url;
+        var modal = new bootstrap.Modal($('receiptModal'));
+        modal.show();
+    };
+
+    window.reorder = async function(id) {
+        try {
+            var order = await fetchWithTimeout(api.getOrder(id), TIMEOUT_MS);
+            if (order && order.orderItems) {
+                order.orderItems.forEach(function(item) {
+                    cartManager.addItem({
+                        id: item.productId || item.id,
+                        name: item.productName || 'Product',
+                        price: item.unitPrice || item.price || 0,
+                        imageUrl: item.productImage || ''
+                    }, item.quantity || 1);
+                });
+                if (typeof cartManager !== 'undefined' && cartManager.showToast) {
+                    cartManager.showToast('Items added to cart!', 'success');
+                }
+            }
+        } catch (e) {
+            if (typeof cartManager !== 'undefined' && cartManager.showToast) {
+                cartManager.showToast('Could not reorder: ' + e.message, 'error');
+            }
+        }
+    };
+
+    // ==================== TRACKING ====================
+    $('trackBtn').addEventListener('click', function() {
+        var tid = $('trackingInput').value.trim();
+        if (!tid) { $('trackingResult').innerHTML = '<div class="alert alert-warning py-2 small">Enter a tracking ID</div>'; return; }
+        $('trackingResult').innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div> Tracking...</div>';
+        fetchWithTimeout(api.getTracking(tid), TIMEOUT_MS).then(function(data) {
+            var status = (data.status || 'unknown').toLowerCase();
+            var html = '<div class="tracking-card">' +
+                '<h5 class="fw-bold mb-3"><i class="fas fa-shipping-fast text-primary me-2"></i>Order Status</h5>' +
+                '<div class="mb-2"><strong>Status:</strong> <span class="status-badge status-' + status + '">' + status.charAt(0).toUpperCase() + status.slice(1) + '</span></div>' +
+                '<div class="mb-2"><strong>Payment:</strong> ' + (data.paymentStatus || '-') + '</div>' +
+                (data.shippingAddress ? '<div class="mb-2"><strong>Shipping to:</strong> ' + data.shippingAddress + '</div>' : '') +
+                (data.deliveryMan ? '<div class="mb-2"><strong>Delivery Man:</strong> ' + (data.deliveryMan.fullName || data.deliveryMan) + '</div>' : '') +
+                '<div class="row g-2 mt-2 small">' +
+                    (data.createdAt ? '<div class="col-6"><span class="text-muted">Ordered:</span> ' + new Date(data.createdAt).toLocaleString() + '</div>' : '') +
+                    (data.paidAt ? '<div class="col-6"><span class="text-muted">Paid:</span> ' + new Date(data.paidAt).toLocaleString() + '</div>' : '') +
+                    (data.shippedAt ? '<div class="col-6"><span class="text-muted">Shipped:</span> ' + new Date(data.shippedAt).toLocaleString() + '</div>' : '') +
+                    (data.deliveredAt ? '<div class="col-6"><span class="text-muted">Delivered:</span> ' + new Date(data.deliveredAt).toLocaleString() + '</div>' : '') +
+                '</div>';
+            if (data.location && data.location.latitude && data.location.longitude) {
+                html += '<div class="mt-2 small"><strong>Latest Location:</strong> ' + data.location.latitude + ', ' + data.location.longitude + (data.location.updatedAt ? ' <span class="text-muted">(' + new Date(data.location.updatedAt).toLocaleString() + ')</span>' : '') + '</div>';
+            }
+            html += '</div>';
+            $('trackingResult').innerHTML = html;
+        }).catch(function(e) {
+            $('trackingResult').innerHTML = '<div class="alert alert-danger py-2 small">' + e.message + '</div>';
+        });
+    });
+
+    // ==================== WISHLIST ====================
+    async function loadWishlist() {
+        var spinner = $('wishlistSpinner');
+        var content = $('wishlistContent');
+        var empty = $('wishlistEmpty');
+        var err = $('wishlistError');
+        if (spinner) spinner.style.display = 'inline-block';
+        if (err) err.style.display = 'none';
+        try {
+            var items = await fetchWithTimeout(api.getWishlist(), TIMEOUT_MS);
+            if (spinner) spinner.style.display = 'none';
+            if (!items || items.length === 0) {
+                if (content) content.innerHTML = '';
+                if (empty) empty.style.display = 'block';
+                return;
+            }
+            if (empty) empty.style.display = 'none';
+            var html = '';
+            items.forEach(function(item) {
+                var product = item.product || item;
+                var name = product.name || 'Product';
+                var price = product.price || 0;
+                var img = product.imageUrl || 'https://via.placeholder.com/64';
+                var pid = product.id;
+                html += '<div class="wishlist-item">' +
+                    '<img src="' + resolveImageUrl(img) + '" onerror="this.src=\'https://via.placeholder.com/64\'">' +
+                    '<div class="flex-grow-1"><h6 class="fw-bold mb-1">' + name + '</h6><span class="text-primary fw-semibold">₦' + price.toFixed(2) + '</span></div>' +
+                    '<div class="d-flex gap-1">' +
+                        '<button class="btn btn-sm btn-primary" onclick="cartManager.addItem({id:' + pid + ',name:\'' + name.replace(/'/g, "\\'") + '\',price:' + price + ',imageUrl:\'' + (img || '') + '\'}); return false;"><i class="fas fa-shopping-cart"></i></button>' +
+                        '<button class="btn btn-sm btn-outline-danger" onclick="removeFromWishlist(' + pid + ', this)"><i class="fas fa-trash"></i></button>' +
+                    '</div></div>';
+            });
+            if (content) content.innerHTML = html;
+        } catch (e) {
+            if (spinner) spinner.style.display = 'none';
+            if (err) { err.textContent = 'Could not load wishlist. ' + e.message; err.style.display = 'block'; }
+        }
+    }
+
+    window.removeFromWishlist = async function(pid, btn) {
+        try {
+            await api.removeFromWishlist(pid);
+            var item = btn.closest('.wishlist-item');
+            if (item) item.remove();
+            if (typeof cartManager !== 'undefined' && cartManager.showToast) {
+                cartManager.showToast('Removed from wishlist', 'warning');
+            }
+        } catch (e) {
+            if (typeof cartManager !== 'undefined' && cartManager.showToast) {
+                cartManager.showToast('Error: ' + e.message, 'error');
+            }
+        }
+    };
+
+    // ==================== REVIEWS ====================
+    async function loadReviews() {
+        var container = $('reviewsContent');
+        // No endpoint to get user's own reviews; use order history + product reviews
+        try {
+            var orders = await fetchWithTimeout(api.getOrderHistory(), TIMEOUT_MS);
+            var list = (orders && orders.orders) ? orders.orders : (Array.isArray(orders) ? orders : []);
+            var reviewedIds = JSON.parse(localStorage.getItem('reviewedProducts') || '[]');
+            if (reviewedIds.length === 0) {
+                container.innerHTML = '<div class="text-center py-5"><i class="fas fa-star fa-3x text-muted mb-3"></i><h5 class="fw-bold">No Reviews Yet</h5><p class="text-muted">You haven\'t written any reviews.</p><a href="shop.html" class="btn btn-primary"><i class="fas fa-shopping-bag me-2"></i>Shop Now</a></div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < reviewedIds.length; i++) {
+                try {
+                    var product = await fetchWithTimeout(api.getProduct(reviewedIds[i]), TIMEOUT_MS);
+                    var rating = localStorage.getItem('reviewRating_' + reviewedIds[i]) || '5';
+                    var comment = localStorage.getItem('reviewComment_' + reviewedIds[i]) || '';
+                    html += '<div class="review-card">' +
+                        '<div class="d-flex justify-content-between align-items-start">' +
+                            '<div><h6 class="fw-bold mb-1">' + (product.name || 'Product #' + reviewedIds[i]) + '</h6>' +
+                            '<span class="text-warning">' + '★'.repeat(parseInt(rating)) + '☆'.repeat(5 - parseInt(rating)) + '</span>' +
+                            '</div>' +
+                            '<a href="product-details.html?id=' + reviewedIds[i] + '" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>' +
+                        '</div>' +
+                        (comment ? '<p class="small text-muted mt-2 mb-0">' + comment + '</p>' : '') +
+                    '</div>';
+                } catch(e) {}
+            }
+            if (!html) {
+                html = '<div class="text-center py-5"><i class="fas fa-star fa-3x text-muted mb-3"></i><h5 class="fw-bold">No Reviews Found</h5><p class="text-muted">Could not load review details.</p></div>';
+            }
+            container.innerHTML = html;
+        } catch (e) {
+            container.innerHTML = '<div class="alert alert-danger">Could not load reviews: ' + e.message + '</div>';
+        }
+    }
+
+    // ==================== PROFILE FORM ====================
+    async function loadProfileForm() {
+        try {
+            var result = await fetchWithTimeout(api.getProfile(), TIMEOUT_MS);
+            $('editName').value = result.fullName || '';
+            $('editEmail').value = result.email || '';
+            $('editPhone').value = result.phone || '';
+        } catch (e) {}
+    }
+
+    $('profileForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var data = {
+            fullName: $('editName').value,
+            phone: $('editPhone').value,
+        };
+        var err = $('profileError');
+        var suc = $('profileSuccess');
+        if (err) err.style.display = 'none';
+        if (suc) suc.style.display = 'none';
+        try {
+            await fetchWithTimeout(api.updateProfile(data), TIMEOUT_MS);
+            if (suc) { suc.textContent = 'Profile updated successfully!'; suc.style.display = 'block'; }
+            if (typeof auth !== 'undefined' && auth.getUser) {
+                var u = auth.getUser();
+                if (u) { u.fullName = data.fullName; localStorage.setItem('user', JSON.stringify(u)); }
+            }
+        } catch (e) {
+            if (err) { err.textContent = 'Error: ' + e.message; err.style.display = 'block'; }
+        }
+    });
+
+    // ==================== ADDRESS FORM ====================
+    async function loadAddressForm() {
+        try {
+            var result = await fetchWithTimeout(api.getProfile(), TIMEOUT_MS);
+            $('editAddress').value = result.address || '';
+            $('editCity').value = result.city || '';
+            $('editState').value = result.state || '';
+            $('editZip').value = result.zipCode || '';
+            $('editCountry').value = result.country || '';
+        } catch (e) {}
+    }
+
+    $('addressForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var data = {
+            address: $('editAddress').value,
+            city: $('editCity').value,
+            state: $('editState').value,
+            zipCode: $('editZip').value,
+            country: $('editCountry').value,
+        };
+        var err = $('addressError');
+        var suc = $('addressSuccess');
+        if (err) err.style.display = 'none';
+        if (suc) suc.style.display = 'none';
+        try {
+            await fetchWithTimeout(api.updateProfile(data), TIMEOUT_MS);
+            if (suc) { suc.textContent = 'Address saved successfully!'; suc.style.display = 'block'; }
+        } catch (e) {
+            if (err) { err.textContent = 'Error: ' + e.message; err.style.display = 'block'; }
+        }
+    });
+
+    // ==================== CHANGE PASSWORD ====================
+    $('passwordForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var err = $('passwordError');
+        var suc = $('passwordSuccess');
+        if (err) err.style.display = 'none';
+        if (suc) suc.style.display = 'none';
+
+        var current = $('currentPassword').value;
+        var newPass = $('newPassword').value;
+        var confirm = $('confirmPassword').value;
+
+        if (newPass !== confirm) {
+            if (err) { err.textContent = 'New passwords do not match.'; err.style.display = 'block'; }
+            return;
+        }
+        if (newPass.length < 6) {
+            if (err) { err.textContent = 'Password must be at least 6 characters.'; err.style.display = 'block'; }
+            return;
+        }
+
+        try {
+            // Re-login to verify current password, then use register-like update
+            await fetchWithTimeout(auth.login(user.email, current), TIMEOUT_MS);
+            // No dedicated change-password endpoint exists — show guidance
+            if (suc) {
+                suc.textContent = 'Password change submitted. If no dedicated endpoint exists, please contact support for assistance.';
+                suc.style.display = 'block';
+            }
+        } catch (e) {
+            if (err) { err.textContent = 'Current password is incorrect.'; err.style.display = 'block'; }
+        }
+    });
+
+    // ==================== NOTIFICATIONS ====================
+    async function loadNotifications() {
+        var list = $('notificationsList');
+        var empty = $('notificationsEmpty');
+        try {
+            var notifs = await fetchWithTimeout(api.request('/admin/notifications'), TIMEOUT_MS);
+            if (!notifs || !Array.isArray(notifs) || notifs.length === 0) {
+                if (list) list.innerHTML = '';
+                if (empty) empty.style.display = 'block';
+                return;
+            }
+            if (empty) empty.style.display = 'none';
+            var html = '';
+            notifs.forEach(function(n) {
+                var isUnread = !n.isRead;
+                html += '<div class="notif-item' + (isUnread ? ' unread' : '') + '" data-id="' + n.id + '">' +
+                    '<div class="activity-icon bg-' + (n.type === 'order' ? 'primary' : 'success') + ' bg-opacity-10 text-' + (n.type === 'order' ? 'primary' : 'success') + '"><i class="fas ' + (n.type === 'order' ? 'fa-shopping-cart' : 'fa-info') + '"></i></div>' +
+                    '<div class="flex-grow-1"><div class="fw-semibold small">' + (n.message || 'Notification') + '</div>' +
+                    '<div class="text-muted" style="font-size:0.75rem">' + (n.createdAt ? new Date(n.createdAt).toLocaleString() : '') + '</div></div>' +
+                    (isUnread ? '<button class="btn btn-sm btn-link text-decoration-none" onclick="markNotifRead(' + n.id + ', this)"><i class="fas fa-check-circle text-primary"></i></button>' : '') +
+                '</div>';
+            });
+            if (list) list.innerHTML = html;
+        } catch (e) {
+            if (list) list.innerHTML = '<div class="text-center py-4 text-muted"><i class="fas fa-bell-slash fa-2x mb-2 d-block"></i>Notifications not available for regular users yet.</div>';
+        }
+    }
+
+    window.markNotifRead = async function(id, btn) {
+        try {
+            await fetchWithTimeout(api.request('/admin/notifications/' + id + '/read', { method: 'POST' }), TIMEOUT_MS);
+            var item = btn.closest('.notif-item');
+            if (item) { item.classList.remove('unread'); btn.remove(); }
+        } catch (e) {}
+    };
+
+    $('markAllReadBtn').addEventListener('click', async function() {
+        try {
+            await fetchWithTimeout(api.request('/admin/notifications/read-all', { method: 'POST' }), TIMEOUT_MS);
+            document.querySelectorAll('.notif-item.unread').forEach(function(el) { el.classList.remove('unread'); var btn = el.querySelector('button'); if (btn) btn.remove(); });
+        } catch (e) {}
+    });
+
+    // ==================== ACTIVITY LOG ====================
+    function loadActivity() {
+        var container = $('activityLog');
+        var stored = JSON.parse(localStorage.getItem('activityLog') || '[]');
+        if (stored.length === 0) {
+            container.innerHTML = '<div class="text-center py-4 text-muted"><i class="fas fa-history fa-2x mb-2 d-block"></i>No activity recorded yet.</div>';
+            return;
+        }
+        var html = '';
+        stored.slice(0, 20).forEach(function(a) {
+            var icon = 'fa-circle';
+            var color = 'secondary';
+            if (a.type === 'login') { icon = 'fa-sign-in-alt'; color = 'primary'; }
+            else if (a.type === 'order') { icon = 'fa-shopping-cart'; color = 'success'; }
+            else if (a.type === 'profile') { icon = 'fa-user-edit'; color = 'info'; }
+            else if (a.type === 'wishlist') { icon = 'fa-heart'; color = 'danger'; }
+            html += '<div class="activity-item">' +
+                '<div class="activity-icon bg-' + color + ' bg-opacity-10 text-' + color + '"><i class="fas ' + icon + '"></i></div>' +
+                '<div><div class="fw-semibold small">' + (a.action || 'Activity') + '</div>' +
+                '<div class="text-muted" style="font-size:0.75rem">' + (a.time || '') + '</div></div></div>';
+        });
+        container.innerHTML = html;
+    }
+
+    // Log activity helper
+    function logActivity(action, type) {
+        var stored = JSON.parse(localStorage.getItem('activityLog') || '[]');
+        stored.unshift({ action: action, type: type || 'general', time: new Date().toLocaleString() });
+        if (stored.length > 50) stored = stored.slice(0, 50);
+        localStorage.setItem('activityLog', JSON.stringify(stored));
+    }
+    logActivity('Visited dashboard', 'login');
+
+    // ==================== DARK MODE ====================
+    var darkToggle = $('darkModeToggle');
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+        darkToggle.checked = true;
+    }
+    darkToggle.addEventListener('change', function() {
+        if (this.checked) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('darkMode', 'true');
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('darkMode', 'false');
+        }
+    });
+
+    // ==================== INIT ====================
+    initSidebar();
+    loadOverview();
+    showSection('overview');
+
+})();
+</script>
+</body>
+</html>

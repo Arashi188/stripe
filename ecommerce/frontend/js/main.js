@@ -29,7 +29,12 @@ function updateAvatar() {
     var avatarEl = document.getElementById('userAvatar');
     var nameEl = document.getElementById('userName');
     if (avatarEl) {
-        avatarEl.textContent = user ? getInitials(user.fullName) : '?';
+        var storedIcon = localStorage.getItem('userIcon');
+        if (storedIcon) {
+            avatarEl.innerHTML = '<i class="fas ' + storedIcon + '"></i>';
+        } else {
+            avatarEl.textContent = user ? getInitials(user.fullName) : '?';
+        }
     }
     if (nameEl && user) {
         nameEl.textContent = user.fullName;
@@ -486,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (page === 'my-account.html' || page === 'user-dashboard.html') {
-        // my-account.html has its own self-contained script
+        // user-dashboard.html has its own self-contained script
     }
 
     if (page === 'order-history.html') {
