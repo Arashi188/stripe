@@ -2318,3 +2318,55 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
     background: var(--primary-light);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
+
+/* ── Bootstrap modal transitions ── */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(0.92);
+    opacity: 0;
+}
+.modal.fade.show .modal-dialog {
+    transform: scale(1);
+    opacity: 1;
+}
+.modal-backdrop.fade {
+    transition: opacity 0.3s ease;
+}
+
+/* ── Tab content transitions ── */
+.tab-content > .tab-pane {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.tab-content > .tab-pane:not(.show) {
+    opacity: 0;
+    transform: translateY(6px);
+}
+.tab-content > .tab-pane.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ── Accordion transitions ── */
+.accordion-button::after {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.accordion-button:not(.collapsed)::after {
+    transform: rotate(180deg);
+}
+.accordion-collapse {
+    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Collapse icon rotation ── */
+[data-bs-toggle="collapse"] .fa-chevron-down,
+[data-bs-toggle="collapse"] .fa-chevron-right,
+[data-bs-toggle="collapse"] .fa-angle-down,
+[data-bs-toggle="collapse"] .fa-angle-right {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+[data-bs-toggle="collapse"][aria-expanded="true"] .fa-chevron-down,
+[data-bs-toggle="collapse"][aria-expanded="true"] .fa-chevron-right,
+[data-bs-toggle="collapse"][aria-expanded="true"] .fa-angle-down,
+[data-bs-toggle="collapse"][aria-expanded="true"] .fa-angle-right {
+    transform: rotate(180deg);
+}
