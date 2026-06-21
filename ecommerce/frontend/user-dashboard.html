@@ -858,10 +858,10 @@
                 var product = item.product || item;
                 var name = product.name || 'Product';
                 var price = product.price || 0;
-                var img = product.imageUrl || 'https://via.placeholder.com/64';
+                var img = product.imageUrl || PLACEHOLDER_IMG;
                 var pid = product.id;
                 html += '<div class="wishlist-item">' +
-                    '<img src="' + resolveImageUrl(img) + '" onerror="this.src=\'https://via.placeholder.com/64\'">' +
+                    '<img src="' + resolveImageUrl(img) + '" onerror="this.onerror=null;this.src=\'' + PLACEHOLDER_IMG + '\'">' +
                     '<div class="flex-grow-1"><h6 class="fw-bold mb-1">' + name + '</h6><span class="text-primary fw-semibold">₦' + price.toFixed(2) + '</span></div>' +
                     '<div class="d-flex gap-1">' +
                         '<button class="btn btn-sm btn-primary" onclick="cartManager.addItem({id:' + pid + ',name:\'' + name.replace(/'/g, "\\'") + '\',price:' + price + ',imageUrl:\'' + (img || '') + '\'}); return false;"><i class="fas fa-shopping-cart"></i></button>' +

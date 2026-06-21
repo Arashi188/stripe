@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         tbody.innerHTML = filtered.map(p => `
             <tr>
-                <td><img src="${resolveImageUrl(p.imageUrl) || 'https://via.placeholder.com/40'}" width="40" height="40" style="object-fit:cover;border-radius:4px"></td>
+                <td><img src="${resolveImageUrl(p.imageUrl)}" width="40" height="40" style="object-fit:cover;border-radius:4px" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'"></td>
                 <td><strong>${p.name}</strong>${p.sku ? `<br><small class="text-muted">SKU: ${p.sku}</small>` : ''}</td>
                 <td>₦${p.price.toFixed(2)}</td>
                 <td>${p.category ? p.category.name : '-'}</td>
@@ -238,7 +238,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('productFeatured').checked = product.featured;
             if (product.imageUrl) {
                 const preview = document.getElementById('imagePreview');
-                preview.querySelector('img').src = resolveImageUrl(product.imageUrl);
+                var imgEl = preview.querySelector('img');
+                imgEl.src = resolveImageUrl(product.imageUrl);
+                imgEl.onerror = function() { this.onerror=null; this.src = PLACEHOLDER_IMG; };
                 preview.style.display = 'block';
             }
         } catch (e) { cartManager.showToast(e.message, 'error'); }

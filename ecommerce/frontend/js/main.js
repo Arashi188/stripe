@@ -41,7 +41,111 @@ function updateAvatar() {
     }
 }
 
+// Page transition overlay
+(function() {
+    var overlay = document.createElement('div');
+    overlay.className = 'page-transition';
+    overlay.id = 'pageTransition';
+    document.body.appendChild(overlay);
+})();
+
+function navigateWithTransition(url) {
+    var overlay = document.getElementById('pageTransition');
+    if (overlay) {
+        overlay.classList.add('active');
+        setTimeout(function() { window.location.href = url; }, 200);
+    } else {
+        window.location.href = url;
+    }
+}
+
+// ── Animation helpers ──
+var ANIM_OBSERVER = null;
+
+function initScrollReveal() {
+    if (ANIM_OBSERVER) { ANIM_OBSERVER.disconnect(); }
+    ANIM_OBSERVER = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('show');
+                ANIM_OBSERVER.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal, .fade-in, .section-stagger, .product-card-3d').forEach(function(el) {
+        ANIM_OBSERVER.observe(el);
+    });
+}
+
+function triggerShake(el) {
+    if (!el) return;
+    el.classList.remove('shake');
+    void el.offsetWidth;
+    el.classList.add('shake');
+    setTimeout(function() { el.classList.remove('shake'); }, 500);
+}
+
+function addRipple(e) {
+    var btn = e.currentTarget;
+    if (btn.classList.contains('btn-loading')) return;
+    var rect = btn.getBoundingClientRect();
+    var ripple = document.createElement('span');
+    ripple.className = 'ripple-effect';
+    var size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    btn.appendChild(ripple);
+    setTimeout(function() { ripple.remove(); }, 600);
+}
+
+function addRippleToButtons() {
+    document.querySelectorAll('.btn-primary, .btn-checkout, .add-to-cart-btn, [onclick*="addItem"], [onclick*="checkout"]').forEach(function(btn) {
+        btn.classList.add('ripple-container');
+        btn.addEventListener('click', addRipple);
+    });
+}
+
+function staggerReveal(cards, baseDelay) {
+    if (!cards || !cards.length) return;
+    cards.forEach(function(el, i) {
+        el.style.transitionDelay = (baseDelay || 0.05) * i + 's';
+        ANIM_OBSERVER.observe(el);
+    });
+}
+
+// Toast notification system (enhanced)
+function showToast(message, type) {
+    if (typeof cartManager !== 'undefined' && cartManager.showToast) {
+        cartManager.showToast(message, type);
+        return;
+    }
+    // Fallback if cartManager not available
+    var container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    var toast = document.createElement('div');
+    toast.className = 'toast-custom ' + (type || 'success');
+    var icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+    toast.innerHTML = '<div class="d-flex align-items-center"><i class="fas ' + icon + ' me-2"></i><span>' + message + '</span></div>';
+    container.appendChild(toast);
+    setTimeout(function() {
+        toast.classList.add('removing');
+        setTimeout(function() { toast.remove(); }, 250);
+    }, 2500);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+
+    // Page load fade-in
+    var pageContent = document.querySelector('.hero-section, .account-header, .page-header, .dashboard-content, main, .container:first-of-type');
+    if (pageContent) {
+        pageContent.classList.add('fade-in-page');
+        setTimeout(function() { pageContent.classList.add('show'); }, 50);
+    }
 
     // Navbar scroll effect
     const navbar = document.querySelector('.navbar');
@@ -169,10 +273,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="col-6 col-lg-3 col-md-4 col-sm-6 mb-4 product-card-3d">
                     <div class="product-card">
                         <div class="product-image">
-                            <img src="${resolveImageUrl(product.imageUrl) || 'https://via.placeholder.com/300x400'}" 
+                            <img src="${resolveImageUrl(product.imageUrl)}" 
                                  alt="${product.name}"
                                  loading="lazy"
-                                 onerror="this.src='https://via.placeholder.com/300x400'">
+                                 onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
                             ${product.compareAtPrice && product.compareAtPrice > product.price ? 
                                 '<span class="product-badge sale">Sale</span>' : ''}
                             <div class="product-actions">
@@ -231,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
             container.innerHTML = categories.map(cat => `
                 <div class="col-md-4 col-sm-6 mb-4">
                     <div class="category-card fade-in" onclick="window.location.href='shop.html?category=${cat.id}'">
-                        <img src="${cat.imageUrl || 'https://via.placeholder.com/400x250'}" alt="${cat.name}" loading="lazy">
+                        <img src="${cat.imageUrl || PLACEHOLDER_IMG}" alt="${cat.name}" loading="lazy" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
                         <div class="overlay">
                             <h4>${cat.name}</h4>
                             <p>${cat.description || 'Explore collection'}</p>
@@ -267,16 +371,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="row g-5">
                     <div class="col-lg-6">
                         <div class="product-gallery">
-                            <img src="${resolveImageUrl(product.imageUrl) || 'https://via.placeholder.com/600x600'}" 
+                            <img src="${resolveImageUrl(product.imageUrl)}" 
                                  alt="${product.name}" 
                                  class="main-image"
                                  id="mainImage"
-                                 onerror="this.src='https://via.placeholder.com/600x600'">
+                                 onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
                             <div class="thumbnails">
                                 ${[product.imageUrl, product.imageUrl2, product.imageUrl3].filter(Boolean).map((img, i) => `
                                     <img src="${resolveImageUrl(img)}" class="${i === 0 ? 'active' : ''}" 
                                          onclick="document.getElementById('mainImage').src=this.src;document.querySelectorAll('.thumbnails img').forEach(t=>t.classList.remove('active'));this.classList.add('active')"
-                                         onerror="this.style.display='none'">
+                                         onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
                                 `).join('')}
                             </div>
                         </div>
@@ -518,7 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="mt-3">
                             ${order.orderItems.map(item => `
                                 <div class="d-flex align-items-center mb-2">
-                                    <img src="${resolveImageUrl(item.productImage) || 'https://via.placeholder.com/50'}" width="50" height="50" style="object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/50'">
+                                    <img src="${resolveImageUrl(item.productImage)}" width="50" height="50" style="object-fit:cover;border-radius:8px" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
                                     <div class="ms-3">
                                         <strong>${item.productName}</strong>
                                         <div class="text-muted">Qty: ${item.quantity} x ₦${item.unitPrice.toFixed(2)}</div>
@@ -557,7 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById('checkoutItems').innerHTML = cart.map(item => `
                 <div class="d-flex align-items-center mb-3">
-                    <img src="${resolveImageUrl(item.image) || 'https://via.placeholder.com/60'}" width="60" height="60" style="object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/60'">
+                    <img src="${resolveImageUrl(item.image)}" width="60" height="60" style="object-fit:cover;border-radius:8px" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
                     <div class="ms-3 flex-grow-1">
                         <strong>${item.name}</strong>
                         <div class="text-muted">Qty: ${item.quantity}</div>
@@ -589,6 +693,8 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
+            if (!email) { triggerShake(document.getElementById('loginEmail')); return; }
+            if (!password) { triggerShake(document.getElementById('loginPassword')); return; }
             const result = await auth.login(email, password);
             if (result.success) {
                 const params = new URLSearchParams(window.location.search);
@@ -611,6 +717,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
             const phone = document.getElementById('regPhone')?.value || '';
+            if (!name) { triggerShake(document.getElementById('regName')); return; }
+            if (!email) { triggerShake(document.getElementById('regEmail')); return; }
+            if (!password || password.length < 6) { triggerShake(document.getElementById('regPassword')); return; }
             const result = await auth.register(name, email, password, phone);
             if (result.success) {
                 window.location.href = 'index.html';
@@ -639,4 +748,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (role === 'SECRETARY' && secLink) secLink.style.display = 'block';
         if (role === 'DELIVERY_MAN' && delLink) delLink.style.display = 'block';
     }
+
+    // Init animations
+    initScrollReveal();
+    addRippleToButtons();
+
+    // Stagger product cards after load
+    var checkCards = setInterval(function() {
+        var cards = document.querySelectorAll('.product-card-3d');
+        if (cards.length > 0) {
+            cards.forEach(function(el, i) {
+                el.style.transitionDelay = (0.05 * i) + 's';
+                if (ANIM_OBSERVER) ANIM_OBSERVER.observe(el);
+            });
+            clearInterval(checkCards);
+        }
+    }, 500);
 });

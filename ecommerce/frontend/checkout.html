@@ -311,9 +311,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     var total = subtotal + shipping + tax;
 
     document.getElementById('checkoutItems').innerHTML = cart.map(function(item) {
-        var imgSrc = (typeof resolveImageUrl === 'function' ? resolveImageUrl(item.image) : item.image) || 'https://via.placeholder.com/60';
+        var imgSrc = (typeof resolveImageUrl === 'function' ? resolveImageUrl(item.image) : item.image) || (typeof PLACEHOLDER_IMG !== 'undefined' ? PLACEHOLDER_IMG : '/images/no-image.svg');
         return '<div class="d-flex align-items-center mb-3 pb-3 border-bottom">' +
-            '<img src="' + imgSrc + '" width="64" height="64" style="object-fit:cover;border-radius:10px" alt="">' +
+            '<img src="' + imgSrc + '" width="64" height="64" style="object-fit:cover;border-radius:10px" alt="" onerror="this.onerror=null;this.src=\'' + (typeof PLACEHOLDER_IMG !== 'undefined' ? PLACEHOLDER_IMG : '/images/no-image.svg') + '\'">' +
             '<div class="ms-3 flex-grow-1">' +
             '<strong class="d-block">' + escapeHtml(item.name) + '</strong>' +
             '<span class="qty-badge">Qty: ' + item.quantity + '</span>' +

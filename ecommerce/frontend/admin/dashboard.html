@@ -220,7 +220,7 @@
                                     <input type="file" class="form-control" id="productImageInput" accept="image/*">
                                     <input type="hidden" id="productImage">
                                     <div id="imagePreview" class="mt-2" style="display:none">
-                                        <img src="" class="img-thumbnail" style="max-height:120px;object-fit:cover">
+                                        <img src="" class="img-thumbnail" style="max-height:120px;object-fit:cover" onerror="this.onerror=null;this.src='../images/no-image.svg'">
                                         <button type="button" class="btn btn-sm btn-outline-danger mt-1" onclick="clearProductImage()"><i class="fas fa-times me-1"></i>Remove</button>
                                     </div>
                                     <small class="text-muted">Supports: PNG, JPG, JPEG, GIF, WEBP, SVG (max 16MB)</small>

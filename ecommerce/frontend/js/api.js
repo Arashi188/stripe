@@ -9,9 +9,10 @@ const USE_LOCAL = !window.location.hostname
 const API_BASE = USE_LOCAL ? 'http://127.0.0.1:5000/api' : RENDER_URL + '/api';
 const UPLOAD_BASE = USE_LOCAL ? 'http://127.0.0.1:5000' : RENDER_URL;
 const FRONTEND_BASE = window.location.origin;
+const PLACEHOLDER_IMG = '/images/no-image.svg';
 
 function resolveImageUrl(url) {
-    if (!url) return url;
+    if (!url) return PLACEHOLDER_IMG;
     if (url.startsWith('/uploads/')) {
         return UPLOAD_BASE + url;
     }
