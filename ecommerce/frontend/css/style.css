@@ -1622,8 +1622,23 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
 /* ── Navbar fix for mobile ── */
 @media (max-width: 991.98px) {
     .navbar .container { position: relative; }
-    .navbar-collapse { background: var(--white); padding: 1rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); margin-top: 0.5rem; }
+    .navbar,
+    .navbar.navbar-scrolled { background: var(--secondary) !important; }
+    .navbar-brand { color: #fff !important; }
+    .navbar-toggler-icon { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important; }
+    .navbar-collapse { background: var(--secondary); padding: 1rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); margin-top: 0.5rem; }
+    .navbar-collapse .nav-link { color: #fff !important; }
+    .navbar-collapse .navbar-nav .nav-link:hover { color: var(--primary-light) !important; }
+    .navbar-collapse .dropdown-menu { background: var(--gray-800); border: 1px solid var(--gray-700); }
+    .navbar-collapse .dropdown-item { color: #fff; }
+    .navbar-collapse .dropdown-item:hover,
+    .navbar-collapse .dropdown-item:focus { background: var(--gray-700); color: #fff; }
+    .navbar-collapse .nav-icon-btn { color: #fff !important; background: transparent; border-color: rgba(255,255,255,0.2); }
+    .navbar-collapse .nav-icon-btn:hover { color: var(--primary-light) !important; }
+    .navbar-collapse .dropdown-arrow { color: #fff; }
+    .navbar-collapse .nav-icons .btn { background: transparent; border-color: rgba(255,255,255,0.2); color: #fff; }
     .nav-icons { margin-top: 0.5rem; }
+    .user-name-text { color: #fff; }
 }
 
 /* Responsive breakpoints */
