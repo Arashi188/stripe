@@ -138,6 +138,57 @@ function showToast(message, type) {
     }, 2500);
 }
 
+// ── Button loading state ──
+function setButtonLoading(btn, isLoading) {
+    if (!btn) return;
+    if (isLoading) {
+        btn._originalHTML = btn.innerHTML;
+        btn.classList.add('btn-loading');
+        btn.innerHTML = '<span class="btn-text">' + btn._originalHTML + '</span><span class="btn-spinner"><i class="fas fa-spinner fa-spin"></i></span>';
+        btn.disabled = true;
+    } else {
+        btn.classList.remove('btn-loading');
+        if (btn._originalHTML) {
+            btn.innerHTML = btn._originalHTML;
+        }
+        btn.disabled = false;
+    }
+}
+
+// ── Welcome overlay ──
+function showWelcomeOverlay(message, iconClass, redirectUrl, delay) {
+    var existing = document.getElementById('welcomeOverlay');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'welcomeOverlay';
+    overlay.className = 'welcome-overlay';
+    overlay.innerHTML =
+        '<div class="welcome-card">' +
+            '<div class="welcome-icon"><i class="fas ' + iconClass + '"></i></div>' +
+            '<div class="welcome-text">' + message + '</div>' +
+        '</div>';
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(function() {
+        overlay.classList.add('show');
+    });
+
+    var stay = delay || 1800;
+    setTimeout(function() {
+        overlay.classList.remove('show');
+        setTimeout(function() {
+            window.location.href = redirectUrl;
+        }, 350);
+    }, stay);
+}
+
+// ── Get first name from full name ──
+function getFirstName(fullName) {
+    if (!fullName) return '';
+    return fullName.trim().split(/\s+/)[0] || '';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // Page load fade-in
@@ -695,7 +746,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = document.getElementById('loginPassword').value;
             if (!email) { triggerShake(document.getElementById('loginEmail')); return; }
             if (!password) { triggerShake(document.getElementById('loginPassword')); return; }
+            const loginBtn = document.querySelector('#loginForm button[type="submit"]');
+            setButtonLoading(loginBtn, true);
             const result = await auth.login(email, password);
+            setButtonLoading(loginBtn, false);
             if (result.success) {
                 const params = new URLSearchParams(window.location.search);
                 var redirect = params.get('redirect');
@@ -705,7 +759,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     else if (result.user.role === 'DELIVERY_MAN') redirect = 'delivery-dashboard.html';
                     else redirect = 'index.html';
                 }
-                window.location.href = redirect;
+                var firstName = getFirstName(result.user.fullName);
+                showWelcomeOverlay('Welcome back, ' + firstName + '!', 'fa-hand-wave', redirect);
             } else {
                 cartManager.showToast(result.error, 'error');
             }
@@ -720,9 +775,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!name) { triggerShake(document.getElementById('regName')); return; }
             if (!email) { triggerShake(document.getElementById('regEmail')); return; }
             if (!password || password.length < 6) { triggerShake(document.getElementById('regPassword')); return; }
+            const regBtn = document.querySelector('#registerForm button[type="submit"]');
+            setButtonLoading(regBtn, true);
             const result = await auth.register(name, email, password, phone);
+            setButtonLoading(regBtn, false);
             if (result.success) {
-                window.location.href = 'index.html';
+                var firstName = getFirstName(result.user.fullName);
+                showWelcomeOverlay('Welcome, ' + firstName + '! Have a great time shopping with us.', 'fa-shopping-bag', 'index.html');
             } else {
                 cartManager.showToast(result.error, 'error');
             }

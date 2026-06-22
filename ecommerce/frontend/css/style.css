@@ -2385,3 +2385,46 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
 [data-bs-toggle="collapse"][aria-expanded="true"] .fa-angle-right {
     transform: rotate(180deg);
 }
+
+/* ── Welcome overlay ── */
+.welcome-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+.welcome-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+.welcome-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 2.5rem 3rem;
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    transform: scale(0.85) translateY(20px);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.welcome-overlay.show .welcome-card {
+    transform: scale(1) translateY(0);
+}
+.welcome-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--success);
+}
+.welcome-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--secondary);
+    line-height: 1.6;
+}
