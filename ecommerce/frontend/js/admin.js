@@ -44,6 +44,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('categoryModal').addEventListener('hidden.bs.modal', () => {
         document.getElementById('categoryForm').reset();
         document.getElementById('categoryId').value = '';
+        pendingCategoryBgFile = null;
+        pendingCategoryBgUrl = '';
+        document.getElementById('categoryBgPreview').style.display = 'none';
+        document.getElementById('categoryBgInput').value = '';
     });
 
     // ════════════════════════════════════════
@@ -88,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             allProducts = await api.getProducts();
             renderProducts();
         } catch (e) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">${e.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${e.message}</td></tr>`;
         }
     };
 
@@ -195,6 +199,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let pendingFile = null;
+    let pendingCategoryBgFile = null;
+    let pendingCategoryBgUrl = ''; // holds URL for existing image or newly uploaded one
+
+    window.uploadCategoryBgImage = (input) => {
+        try {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                cartManager.showToast('File too large. Maximum 5MB.', 'error');
+                input.value = '';
+                return;
+            }
+            pendingCategoryBgFile = file;
+            pendingCategoryBgUrl = ''; // will be set after upload
+            const preview = document.getElementById('categoryBgPreview');
+            const img = document.getElementById('categoryBgPreviewImg');
+            const reader = new FileReader();
+            reader.onload = (e) => { img.src = e.target.result; preview.style.display = 'block'; };
+            reader.readAsDataURL(file);
+        } catch (err) { console.error('uploadCategoryBgImage error:', err); }
+    };
+
+    window.clearCategoryBgImage = () => {
+        pendingCategoryBgFile = null;
+        pendingCategoryBgUrl = '';
+        document.getElementById('categoryBgInput').value = '';
+        document.getElementById('categoryBgPreview').style.display = 'none';
+    };
 
     window.uploadProductImage = (input) => {
         try {
@@ -266,7 +298,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loadAdminCategories = async () => {
         const tbody = document.getElementById('categoriesTableBody');
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner"></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner"></div></td></tr>';
         try {
             const cats = await api.admin.getAdminCategories();
             tbody.innerHTML = cats.map(c => `
@@ -274,6 +306,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${c.id}</td>
                     <td><strong>${c.name}</strong></td>
                     <td>${c.description || '-'}</td>
+                    <td>${c.backgroundImageUrl ? '<img src="' + c.backgroundImageUrl + '" width="50" height="35" style="object-fit:cover;border-radius:4px" onerror="this.onerror=null;this.style.display=\'none\'">' : '<span class="text-muted small">No Image</span>'}</td>
                     <td><span class="badge bg-info bg-opacity-10 text-info">${c.productCount}</span></td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary me-1" onclick="editCategory(${c.id})"><i class="fas fa-edit"></i></button>
@@ -282,7 +315,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </tr>
             `).join('');
         } catch (e) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${e.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${e.message}</td></tr>`;
         }
     };
 
@@ -290,9 +323,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('categoryForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('categoryId').value;
+        const btn = document.getElementById('categorySaveBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+        let backgroundImageUrl = pendingCategoryBgUrl;
+        if (pendingCategoryBgFile) {
+            try {
+                const formData = new FormData();
+                formData.append('file', pendingCategoryBgFile);
+                const baseUrl = typeof API_BASE !== 'undefined' ? API_BASE : 'http://localhost:5001/api';
+                const res = await fetch(`${baseUrl}/upload`, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${api.getToken()}` },
+                    body: formData,
+                });
+                const result = await res.json();
+                if (result.url) backgroundImageUrl = result.url;
+            } catch (uploadErr) {
+                cartManager.showToast('Image upload failed: ' + uploadErr.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save me-2"></i>Save';
+                return;
+            }
+        }
+
         const data = {
             name: document.getElementById('categoryName').value,
             description: document.getElementById('categoryDescription').value,
+            backgroundImageUrl: backgroundImageUrl,
         };
         try {
             if (id) {
@@ -302,9 +361,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await api.admin.createCategory(data);
                 cartManager.showToast('Category created!', 'success');
             }
+            pendingCategoryBgFile = null;
             bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
             loadAdminCategories();
-        } catch (e) { cartManager.showToast(e.message, 'error'); }
+        } catch (e) {
+            cartManager.showToast(e.message, 'error');
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save me-2"></i>Save';
     });
 
     window.editCategory = async (id) => {
@@ -316,6 +380,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('categoryName').value = cat.name;
             document.getElementById('categoryDescription').value = cat.description || '';
             document.getElementById('categoryModalTitle').innerHTML = '<i class="fas fa-edit me-2 text-primary"></i>Edit Category';
+            pendingCategoryBgFile = null;
+            if (cat.backgroundImageUrl) {
+                pendingCategoryBgUrl = cat.backgroundImageUrl;
+                var preview = document.getElementById('categoryBgPreview');
+                var img = document.getElementById('categoryBgPreviewImg');
+                img.src = cat.backgroundImageUrl;
+                preview.style.display = 'block';
+            } else {
+                pendingCategoryBgUrl = '';
+                document.getElementById('categoryBgPreview').style.display = 'none';
+            }
             bootstrap.Modal.getOrCreateInstance(document.getElementById('categoryModal')).show();
         } catch (e) { cartManager.showToast(e.message, 'error'); }
     };

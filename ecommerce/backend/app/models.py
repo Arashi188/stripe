@@ -36,6 +36,7 @@ class Category(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.String(255))
     image_url = db.Column(db.String(500))
+    background_image_url = db.Column(db.String(500))
     is_active = db.Column(db.Boolean, default=True)
 
     products = db.relationship('Product', backref='category', lazy=True)

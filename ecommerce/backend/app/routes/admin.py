@@ -111,7 +111,7 @@ def get_categories():
     cats = Category.query.all()
     return [{
         'id': c.id, 'name': c.name, 'description': c.description,
-        'imageUrl': c.image_url, 'productCount': len(c.products),
+        'imageUrl': c.image_url, 'backgroundImageUrl': c.background_image_url, 'productCount': len(c.products),
     } for c in cats]
 
 
@@ -121,10 +121,18 @@ def create_category():
     data = request.get_json()
     if not data or not data.get('name'):
         return {'error': 'Category name is required'}, 400
-    cat = Category(name=data['name'], description=data.get('description', ''), image_url=data.get('imageUrl', ''))
+    cat = Category(
+        name=data['name'],
+        description=data.get('description', ''),
+        image_url=data.get('imageUrl', ''),
+        background_image_url=data.get('backgroundImageUrl', ''),
+    )
     db.session.add(cat)
     db.session.commit()
-    return {'id': cat.id, 'name': cat.name, 'description': cat.description, 'imageUrl': cat.image_url}, 201
+    return {
+        'id': cat.id, 'name': cat.name, 'description': cat.description,
+        'imageUrl': cat.image_url, 'backgroundImageUrl': cat.background_image_url,
+    }, 201
 
 
 @admin_bp.route('/categories/<int:category_id>', methods=['PUT'])
@@ -138,6 +146,8 @@ def update_category(category_id):
         cat.description = data['description']
     if 'imageUrl' in data:
         cat.image_url = data['imageUrl']
+    if 'backgroundImageUrl' in data:
+        cat.background_image_url = data['backgroundImageUrl']
     db.session.commit()
     return {'message': 'Category updated'}
 

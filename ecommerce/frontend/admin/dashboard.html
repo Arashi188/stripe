@@ -272,6 +272,7 @@
                                         <th>ID</th>
                                         <th>Name</th>
                                         <th>Description</th>
+                                        <th>Background</th>
                                         <th>Products</th>
                                         <th>Actions</th>
                                     </tr>
@@ -450,6 +451,17 @@
                     <div class="mb-3">
                         <label class="form-label">Description</label>
                         <textarea class="form-control" id="categoryDescription" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Background Image</label>
+                        <input type="file" class="form-control" id="categoryBgInput" accept=".jpg,.jpeg,.png,.webp" onchange="uploadCategoryBgImage(this)">
+                        <small class="text-muted mt-1 d-block">Upload a background image for this category (JPG, PNG or WEBP — max 5MB)</small>
+                        <div id="categoryBgPreview" class="mt-2" style="display:none">
+                            <img id="categoryBgPreviewImg" class="rounded border" style="max-height:120px;width:100%;object-fit:cover">
+                            <button type="button" class="btn btn-sm btn-outline-danger mt-1" onclick="clearCategoryBgImage()">
+                                <i class="fas fa-times me-1"></i>Remove Image
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>

@@ -28,6 +28,8 @@ def run_migrations():
     _add_column_if_missing('orders', 'receipt_scan_status', 'receipt_scan_status VARCHAR(20)')
     _add_column_if_missing('orders', 'receipt_scan_details', 'receipt_scan_details TEXT')
 
+    _add_column_if_missing('categories', 'background_image_url', 'background_image_url VARCHAR(500)')
+
     if 'payments' in inspector.get_table_names():
         _add_column_if_missing('payments', 'payment_method', "payment_method VARCHAR(30) DEFAULT 'cod'")
         _add_column_if_missing('payments', 'stripe_checkout_session_id', 'stripe_checkout_session_id VARCHAR(200)')

@@ -355,22 +355,28 @@ h1, h2, h3, h4, h5, h6 {
     cursor: pointer;
     height: 250px;
     transition: var(--transition);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.category-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.5s ease;
+}
+
+.category-card:hover::before {
+    transform: scale(1.1);
 }
 
 .category-card:hover {
     transform: translateY(-10px);
     box-shadow: var(--shadow-xl);
-}
-
-.category-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
-
-.category-card:hover img {
-    transform: scale(1.1);
 }
 
 .category-card .overlay {
@@ -381,6 +387,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: 2rem;
     background: linear-gradient(transparent, rgba(0,0,0,0.8));
     color: white;
+    z-index: 1;
 }
 
 .category-card .overlay h4 {
