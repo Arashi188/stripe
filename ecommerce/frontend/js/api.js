@@ -257,3 +257,28 @@ api.admin.getBankAccounts = () => api.request('/admin/bank-accounts');
 api.admin.createBankAccount = (data) => api.request('/admin/bank-accounts', { method: 'POST', body: JSON.stringify(data) });
 api.admin.updateBankAccount = (id, data) => api.request(`/admin/bank-accounts/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 api.admin.deleteBankAccount = (id) => api.request(`/admin/bank-accounts/${id}`, { method: 'DELETE' });
+
+// Warehouse
+api.warehouse = {
+    getTasks: (status) => api.request(`/warehouse/tasks${status ? '?status=' + status : ''}`),
+    markPacked: (taskId) => api.request(`/warehouse/tasks/${taskId}/pack`, { method: 'POST' }),
+    undoPack: (taskId) => api.request(`/warehouse/tasks/${taskId}/unpack`, { method: 'POST' }),
+    getOrderDetail: (orderId) => api.request(`/warehouse/order-detail/${orderId}`),
+};
+
+// Secretary — send to warehouse
+api.secretary.sendToWarehouse = (orderId, notes) => api.request('/secretary/send-to-warehouse', {
+    method: 'POST',
+    body: JSON.stringify({ orderId, notes }),
+});
+
+// Chat
+api.chat = {
+    getConversations: () => api.request('/chat/conversations'),
+    getMessages: (convId) => api.request(`/chat/conversations/${convId}/messages`),
+    sendMessage: (convId, messageText) => api.request(`/chat/conversations/${convId}/messages`, {
+        method: 'POST',
+        body: JSON.stringify({ message_text: messageText }),
+    }),
+    getUnreadCount: () => api.request('/chat/unread-count'),
+};

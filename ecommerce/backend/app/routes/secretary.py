@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
-from app.models import Order, User, Notification, BankAccount
+from app.models import Order, User, Notification, BankAccount, WarehouseTask, ChatConversation, ChatMessage
 
 secretary_bp = Blueprint('secretary', __name__)
 
@@ -63,6 +63,7 @@ def dashboard():
             'status': o.status,
             'trackingId': o.tracking_id,
             'receiptUrl': o.receipt_url,
+            'deliveryManId': o.delivery_man_id,
             'createdAt': o.created_at.isoformat(),
         } for o in recent_orders],
         'approvedToday': approved_today,
@@ -120,6 +121,20 @@ def assign_delivery(order_id):
         order.paid_at = datetime.now(timezone.utc)
     if not order.tracking_id:
         order.generate_tracking_id()
+
+    secretary_id = int(get_jwt_identity())
+
+    existing_conv = ChatConversation.query.filter_by(
+        order_id=order.id, delivery_man_id=delivery_man_id
+    ).first()
+    if not existing_conv:
+        conv = ChatConversation(
+            order_id=order.id,
+            secretary_id=secretary_id,
+            delivery_man_id=delivery_man_id,
+        )
+        db.session.add(conv)
+
     db.session.commit()
     Notification(
         user_id=delivery_man_id,
@@ -136,6 +151,32 @@ def assign_delivery(order_id):
 def list_delivery_men():
     men = User.query.filter_by(role='DELIVERY_MAN').all()
     return [{'id': m.id, 'fullName': m.full_name, 'phone': m.phone, 'email': m.email} for m in men]
+
+
+@secretary_bp.route('/send-to-warehouse', methods=['POST'])
+@secretary_required
+def send_to_warehouse():
+    data = request.get_json()
+    order_id = data.get('orderId')
+    notes = data.get('notes', '')
+    if not order_id:
+        return {'error': 'Order ID required'}, 400
+    order = Order.query.get_or_404(order_id)
+    existing_task = WarehouseTask.query.filter_by(order_id=order_id, status='PENDING').first()
+    if existing_task:
+        return {'error': 'Order already sent to warehouse'}, 400
+    items_summary = '; '.join([f'{i.product_name} x{i.quantity}' for i in order.order_items])
+    task = WarehouseTask(
+        order_id=order.id,
+        sent_by=int(get_jwt_identity()),
+        items_summary=items_summary,
+        notes=notes,
+    )
+    db.session.add(task)
+    if order.status == 'PROCESSING':
+        order.status = 'IN_WAREHOUSE'
+    db.session.commit()
+    return {'message': 'Order sent to warehouse', 'task_id': task.id}
 
 
 @secretary_bp.route('/bank-accounts', methods=['GET'])

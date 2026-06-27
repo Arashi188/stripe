@@ -79,6 +79,16 @@ def seed_data():
         )
         db.session.add(delivery_man)
 
+        # Warehouse worker
+        warehouse = User(
+            email='warehouse@shoppremium.com',
+            password=generate_password_hash('warehouse123'),
+            full_name='Walter Packer',
+            phone='+2348123456789',
+            role='WAREHOUSE',
+        )
+        db.session.add(warehouse)
+
         # Categories
         categories_data = [
             ('Fashion', 'Trendy clothing and accessories',
@@ -174,6 +184,7 @@ def seed_data():
         print('User:         user@example.com / user123')
         print('Secretary:    secretary@shoppremium.com / secretary123')
         print('Delivery Man: delivery@shoppremium.com / delivery123')
+        print('Warehouse:    warehouse@shoppremium.com / warehouse123')
 
 
 if __name__ == '__main__':

@@ -3,10 +3,12 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
+from flask_socketio import SocketIO
 from config import config_by_name
 
 db = SQLAlchemy()
 jwt = JWTManager()
+socketio = SocketIO(cors_allowed_origins='*')
 
 
 def create_app(config_name='development'):
@@ -50,6 +52,8 @@ def create_app(config_name='development'):
     from app.routes.secretary import secretary_bp
     from app.routes.delivery import delivery_bp
     from app.routes.tracking import tracking_bp
+    from app.routes.warehouse import warehouse_bp
+    from app.routes.chat import chat_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(products_bp, url_prefix='/api/products')
@@ -63,6 +67,8 @@ def create_app(config_name='development'):
     app.register_blueprint(reviews_bp, url_prefix='/api/reviews')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(upload_bp, url_prefix='/api/upload')
+    app.register_blueprint(warehouse_bp)
+    app.register_blueprint(chat_bp)
 
     @app.route('/uploads/<path:filename>')
     def serve_upload(filename):
@@ -87,5 +93,9 @@ def create_app(config_name='development'):
 
         from app.seed import create_admin_if_not_exists
         create_admin_if_not_exists()
+
+    socketio.init_app(app)
+    from app.socket_events import register_socket_handlers
+    register_socket_handlers(socketio)
 
     return app
