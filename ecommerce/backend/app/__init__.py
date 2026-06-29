@@ -20,11 +20,20 @@ def create_app(config_name='development'):
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
     os.makedirs(upload_dir, exist_ok=True)
 
-    CORS(app, origins=[
-        'https://stripe-two-dun.vercel.app',
-        'http://127.0.0.1:5500',
-        'http://localhost:5500'
-    ])
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": [
+                "https://stripe-two-dun.vercel.app",
+                "http://127.0.0.1:5500",
+                "http://localhost:5500",
+                "http://127.0.0.1:5501",
+                "http://localhost:5501",
+            ],
+            "supports_credentials": True,
+            "allow_headers": ["Content-Type", "Authorization"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        }
+    })
     db.init_app(app)
     jwt.init_app(app)
 
