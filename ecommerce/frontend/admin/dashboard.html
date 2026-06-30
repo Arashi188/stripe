@@ -308,6 +308,14 @@
                             <input type="text" class="form-control" id="productBrand">
                         </div>
                     </div>
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Product Image (optional — JPG, PNG or WEBP, max 5MB)</label>
+                        <input type="file" class="form-control" id="productImage" accept=".jpg,.jpeg,.png,.webp" onchange="previewProductImage(event)">
+                        <div id="productImagePreview" class="mt-2" style="display:none">
+                            <img id="productImagePreviewImg" src="" alt="Preview" style="max-width:200px;max-height:200px;border-radius:8px;border:1px solid #dee2e6;object-fit:cover">
+                            <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="clearProductImage()"><i class="fas fa-times"></i> Remove</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -334,6 +342,14 @@
                     <div class="mb-3">
                         <label class="form-label">Description</label>
                         <textarea class="form-control" id="categoryDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category Image (optional — JPG, PNG or WEBP, max 5MB)</label>
+                        <input type="file" class="form-control" id="categoryImage" accept=".jpg,.jpeg,.png,.webp" onchange="previewCategoryImage(event)">
+                        <div id="categoryImagePreview" class="mt-2" style="display:none">
+                            <img id="categoryImagePreviewImg" src="" alt="Preview" style="max-width:200px;max-height:200px;border-radius:8px;border:1px solid #dee2e6;object-fit:cover">
+                            <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="clearCategoryImage()"><i class="fas fa-times"></i> Remove</button>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

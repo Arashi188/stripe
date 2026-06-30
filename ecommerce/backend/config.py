@@ -20,6 +20,10 @@ class Config:
 
     FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://stripe-two-dun.vercel.app')
 
+    CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
+    CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+    CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
+
 
 
 

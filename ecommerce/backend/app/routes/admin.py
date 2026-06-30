@@ -6,6 +6,7 @@ from sqlalchemy import func
 from app import db
 from app.models import User, Product, Category, Order, OrderItem, Cart, Wishlist, Review, BankAccount, WarehouseTask, ChatConversation, ChatMessage
 from werkzeug.security import generate_password_hash
+from app.cloudinary_helper import upload_image
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/api/admin')
 
@@ -114,6 +115,7 @@ def get_products():
                 'categoryId': p.category_id,
                 'categoryName': p.category.name if p.category else None,
                 'isActive': p.is_active,
+                'imageUrl': p.image_url,
                 'createdAt': p.created_at.isoformat() if p.created_at else None,
             } for p in items],
             'pagination': pagination,
@@ -127,9 +129,8 @@ def get_products():
 @admin_required
 def create_product():
     try:
-        data = request.get_json()
-        if not data:
-            return {'error': 'No data provided'}, 400
+        data = request.form if request.form else request.get_json(silent=True) or {}
+        file = request.files.get('image')
 
         errors = {}
         name = (data.get('name') or '').strip()
@@ -164,22 +165,46 @@ def create_product():
         if errors:
             return {'errors': errors}, 400
 
+        image_url = None
+        upload_warning = None
+        if file and file.filename:
+            try:
+                image_url = upload_image(file, 'products')
+            except (ValueError, RuntimeError) as e:
+                upload_warning = str(e)
+
+        compare_at_price = data.get('compareAtPrice')
+        if compare_at_price:
+            try:
+                compare_at_price = float(compare_at_price)
+            except (ValueError, TypeError):
+                compare_at_price = None
+
+        brand = (data.get('brand') or '').strip() or None
+
         product = Product(
             name=name,
             description=(data.get('description') or '').strip(),
             price=price,
+            compare_at_price=compare_at_price,
             stock_quantity=stock_quantity,
             category_id=category_id,
+            brand=brand,
+            image_url=image_url,
         )
         db.session.add(product)
         db.session.commit()
-        return {
+        response = {
             'id': product.id,
             'name': product.name,
             'price': float(product.price),
             'stockQuantity': product.stock_quantity,
             'categoryId': product.category_id,
-        }, 201
+            'imageUrl': product.image_url,
+        }
+        if upload_warning:
+            response['warning'] = 'Created successfully, but image upload failed. You can add an image later by editing it.'
+        return response, 201
     except Exception:
         db.session.rollback()
         return {'error': 'Failed to create product'}, 500
@@ -190,9 +215,8 @@ def create_product():
 def update_product(product_id):
     try:
         product = Product.query.get_or_404(product_id)
-        data = request.get_json()
-        if not data:
-            return {'error': 'No data provided'}, 400
+        data = request.form if request.form else request.get_json(silent=True) or {}
+        file = request.files.get('image')
 
         if 'name' in data:
             name = (data['name'] or '').strip()
@@ -223,14 +247,25 @@ def update_product(product_id):
                 return {'error': 'Category does not exist'}, 400
             product.category_id = data['categoryId']
 
+        upload_warning = None
+        if file and file.filename:
+            try:
+                product.image_url = upload_image(file, 'products')
+            except (ValueError, RuntimeError) as e:
+                upload_warning = str(e)
+
         db.session.commit()
-        return {
+        response = {
             'id': product.id,
             'name': product.name,
             'price': float(product.price),
             'stockQuantity': product.stock_quantity,
             'categoryId': product.category_id,
+            'imageUrl': product.image_url,
         }
+        if upload_warning:
+            response['warning'] = 'Updated successfully, but image upload failed.'
+        return response
     except Exception:
         db.session.rollback()
         return {'error': 'Failed to update product'}, 500
@@ -251,6 +286,7 @@ def get_product(product_id):
             'categoryId': p.category_id,
             'categoryName': p.category.name if p.category else None,
             'brand': p.brand,
+            'imageUrl': p.image_url,
             'isActive': p.is_active,
             'createdAt': p.created_at.isoformat() if p.created_at else None,
         }
@@ -296,6 +332,7 @@ def get_categories():
             'id': c.id,
             'name': c.name,
             'description': c.description,
+            'imageUrl': c.image_url,
             'productCount': len(c.products),
             'isActive': c.is_active,
             'createdAt': c.created_at.isoformat() if hasattr(c, 'created_at') and c.created_at else None,
@@ -309,9 +346,8 @@ def get_categories():
 @admin_required
 def create_category():
     try:
-        data = request.get_json()
-        if not data:
-            return {'error': 'No data provided'}, 400
+        data = request.form if request.form else request.get_json(silent=True) or {}
+        file = request.files.get('image')
 
         name = (data.get('name') or '').strip()
         if not name:
@@ -321,18 +357,31 @@ def create_category():
         if existing:
             return {'error': 'A category with this name already exists'}, 400
 
+        image_url = None
+        upload_warning = None
+        if file and file.filename:
+            try:
+                image_url = upload_image(file, 'categories')
+            except (ValueError, RuntimeError) as e:
+                upload_warning = str(e)
+
         cat = Category(
             name=name,
             description=(data.get('description') or '').strip(),
+            image_url=image_url,
         )
         db.session.add(cat)
         db.session.commit()
-        return {
+        response = {
             'id': cat.id,
             'name': cat.name,
             'description': cat.description,
+            'imageUrl': cat.image_url,
             'productCount': 0,
-        }, 201
+        }
+        if upload_warning:
+            response['warning'] = 'Created successfully, but image upload failed. You can add an image later by editing it.'
+        return response, 201
     except Exception:
         db.session.rollback()
         return {'error': 'Failed to create category'}, 500
@@ -343,9 +392,8 @@ def create_category():
 def update_category(category_id):
     try:
         cat = Category.query.get_or_404(category_id)
-        data = request.get_json()
-        if not data:
-            return {'error': 'No data provided'}, 400
+        data = request.form if request.form else request.get_json(silent=True) or {}
+        file = request.files.get('image')
 
         if 'name' in data:
             name = (data['name'] or '').strip()
@@ -361,13 +409,24 @@ def update_category(category_id):
         if 'description' in data:
             cat.description = (data['description'] or '').strip()
 
+        upload_warning = None
+        if file and file.filename:
+            try:
+                cat.image_url = upload_image(file, 'categories')
+            except (ValueError, RuntimeError) as e:
+                upload_warning = str(e)
+
         db.session.commit()
-        return {
+        response = {
             'id': cat.id,
             'name': cat.name,
             'description': cat.description,
+            'imageUrl': cat.image_url,
             'productCount': len(cat.products),
         }
+        if upload_warning:
+            response['warning'] = 'Updated successfully, but image upload failed.'
+        return response
     except Exception:
         db.session.rollback()
         return {'error': 'Failed to update category'}, 500

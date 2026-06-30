@@ -4,6 +4,50 @@ var currentProductPage = 1;
 var currentCustomerPage = 1;
 var currentOrderPage = 1;
 
+// ── Image preview helpers ──
+
+function previewProductImage(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('File too large. Maximum is 5MB.', 'error');
+        event.target.value = '';
+        return;
+    }
+    var previewDiv = document.getElementById('productImagePreview');
+    var previewImg = document.getElementById('productImagePreviewImg');
+    previewImg.src = URL.createObjectURL(file);
+    previewDiv.style.display = 'block';
+}
+
+function clearProductImage() {
+    document.getElementById('productImage').value = '';
+    var previewDiv = document.getElementById('productImagePreview');
+    previewDiv.style.display = 'none';
+    document.getElementById('productImagePreviewImg').src = '';
+}
+
+function previewCategoryImage(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('File too large. Maximum is 5MB.', 'error');
+        event.target.value = '';
+        return;
+    }
+    var previewDiv = document.getElementById('categoryImagePreview');
+    var previewImg = document.getElementById('categoryImagePreviewImg');
+    previewImg.src = URL.createObjectURL(file);
+    previewDiv.style.display = 'block';
+}
+
+function clearCategoryImage() {
+    document.getElementById('categoryImage').value = '';
+    var previewDiv = document.getElementById('categoryImagePreview');
+    previewDiv.style.display = 'none';
+    document.getElementById('categoryImagePreviewImg').src = '';
+}
+
 function showSection(sectionId) {
     document.querySelectorAll('.sidebar .nav-link').forEach(function(l) {
         l.classList.remove('active');
@@ -118,10 +162,11 @@ function renderProducts(page) {
             return;
         }
 
-        var html = '<div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Stock</th><th>Category</th><th>Active</th><th>Actions</th></tr></thead><tbody>';
+        var html = '<div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th style="width:50px">Image</th><th>Name</th><th>Price</th><th>Stock</th><th>Category</th><th>Active</th><th>Actions</th></tr></thead><tbody>';
         products.forEach(function(p) {
+            var thumb = p.imageUrl ? '<img src="' + p.imageUrl + '" alt="" style="width:40px;height:40px;border-radius:6px;object-fit:cover">' : '<div style="width:40px;height:40px;border-radius:6px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#94a3b8"><i class="fas fa-box"></i></div>';
             html += '<tr>' +
-                '<td>' + p.id + '</td>' +
+                '<td>' + thumb + '</td>' +
                 '<td><strong>' + (p.name || '') + '</strong></td>' +
                 '<td>₦' + (p.price || 0).toFixed(2) + '</td>' +
                 '<td>' + (p.stockQuantity || 0) + '</td>' +
@@ -157,6 +202,8 @@ function showAddProductModal() {
     document.getElementById('productComparePrice').value = '';
     document.getElementById('productStock').value = '0';
     document.getElementById('productBrand').value = '';
+    document.getElementById('productImage').value = '';
+    clearProductImage();
 
     var catSelect = document.getElementById('productCategory');
     catSelect.innerHTML = '<option value="">Loading...</option>';
@@ -173,6 +220,8 @@ function showAddProductModal() {
 function showEditProductModal(id) {
     document.getElementById('productModalTitle').textContent = 'Edit Product';
     document.getElementById('productId').value = id;
+    document.getElementById('productImage').value = '';
+    clearProductImage();
 
     var catSelect = document.getElementById('productCategory');
     catSelect.innerHTML = '<option value="">Loading...</option>';
@@ -192,6 +241,12 @@ function showEditProductModal(id) {
         document.getElementById('productStock').value = p.stockQuantity || 0;
         document.getElementById('productBrand').value = p.brand || '';
         if (p.categoryId) catSelect.value = p.categoryId;
+        if (p.imageUrl) {
+            var previewDiv = document.getElementById('productImagePreview');
+            var previewImg = document.getElementById('productImagePreviewImg');
+            previewImg.src = p.imageUrl;
+            previewDiv.style.display = 'block';
+        }
     }).catch(function(err) {
         showToast(err.message, 'error');
     });
@@ -209,23 +264,27 @@ function saveProduct() {
     if (!price || parseFloat(price) < 0) { showToast('Valid price is required', 'error'); return; }
     if (!categoryId) { showToast('Please select a category', 'error'); return; }
 
-    var data = {
-        name: name,
-        description: document.getElementById('productDescription').value.trim(),
-        price: parseFloat(price),
-        compareAtPrice: document.getElementById('productComparePrice').value ? parseFloat(document.getElementById('productComparePrice').value) : undefined,
-        stockQuantity: parseInt(document.getElementById('productStock').value) || 0,
-        category_id: parseInt(categoryId),
-        brand: document.getElementById('productBrand').value.trim() || undefined,
-    };
+    var fd = new FormData();
+    fd.append('name', name);
+    fd.append('description', document.getElementById('productDescription').value.trim());
+    fd.append('price', price);
+    var comparePrice = document.getElementById('productComparePrice').value;
+    if (comparePrice) fd.append('compareAtPrice', comparePrice);
+    fd.append('stockQuantity', document.getElementById('productStock').value || '0');
+    fd.append('categoryId', categoryId);
+    var brand = document.getElementById('productBrand').value.trim();
+    if (brand) fd.append('brand', brand);
+    var imageFile = document.getElementById('productImage').files[0];
+    if (imageFile) fd.append('image', imageFile);
 
     var btn = document.getElementById('saveProductBtn');
     setButtonLoading(btn, true);
 
-    var promise = id ? api.admin.updateProduct(parseInt(id), data) : api.admin.createProduct(data);
-    promise.then(function() {
+    var promise = id ? api.admin.updateProduct(parseInt(id), fd) : api.admin.createProduct(fd);
+    promise.then(function(resp) {
         bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
         showToast(id ? 'Product updated!' : 'Product created!', 'success');
+        if (resp && resp.warning) showToast(resp.warning, 'warning');
         renderProducts();
     }).catch(function(err) {
         showToast(err.message, 'error');
@@ -260,10 +319,11 @@ function renderCategories() {
             return;
         }
 
-        var html = '<div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Products</th><th>Actions</th></tr></thead><tbody>';
+        var html = '<div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th style="width:50px">Image</th><th>Name</th><th>Description</th><th>Products</th><th>Actions</th></tr></thead><tbody>';
         cats.forEach(function(c) {
+            var thumb = c.imageUrl ? '<img src="' + c.imageUrl + '" alt="" style="width:40px;height:40px;border-radius:6px;object-fit:cover">' : '<div style="width:40px;height:40px;border-radius:6px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#94a3b8"><i class="fas fa-tag"></i></div>';
             html += '<tr>' +
-                '<td>' + c.id + '</td>' +
+                '<td>' + thumb + '</td>' +
                 '<td><strong>' + (c.name || '') + '</strong></td>' +
                 '<td>' + (c.description || '-') + '</td>' +
                 '<td><span class="badge bg-secondary">' + (c.productCount || 0) + '</span></td>' +
@@ -284,18 +344,28 @@ function showAddCategoryModal() {
     document.getElementById('categoryId').value = '';
     document.getElementById('categoryName').value = '';
     document.getElementById('categoryDescription').value = '';
+    document.getElementById('categoryImage').value = '';
+    clearCategoryImage();
     new bootstrap.Modal(document.getElementById('categoryModal')).show();
 }
 
 function showEditCategoryModal(id) {
     document.getElementById('categoryModalTitle').textContent = 'Edit Category';
     document.getElementById('categoryId').value = id;
+    document.getElementById('categoryImage').value = '';
+    clearCategoryImage();
 
     api.admin.getCategories().then(function(cats) {
         var cat = cats.find(function(c) { return c.id === id; });
         if (cat) {
             document.getElementById('categoryName').value = cat.name || '';
             document.getElementById('categoryDescription').value = cat.description || '';
+            if (cat.imageUrl) {
+                var previewDiv = document.getElementById('categoryImagePreview');
+                var previewImg = document.getElementById('categoryImagePreviewImg');
+                previewImg.src = cat.imageUrl;
+                previewDiv.style.display = 'block';
+            }
         }
     }).catch(function(err) {
         showToast(err.message, 'error');
@@ -310,18 +380,20 @@ function saveCategory() {
 
     if (!name) { showToast('Category name is required', 'error'); return; }
 
-    var data = {
-        name: name,
-        description: document.getElementById('categoryDescription').value.trim(),
-    };
+    var fd = new FormData();
+    fd.append('name', name);
+    fd.append('description', document.getElementById('categoryDescription').value.trim());
+    var imageFile = document.getElementById('categoryImage').files[0];
+    if (imageFile) fd.append('image', imageFile);
 
     var btn = document.getElementById('saveCategoryBtn');
     setButtonLoading(btn, true);
 
-    var promise = id ? api.admin.updateCategory(parseInt(id), data) : api.admin.createCategory(data);
-    promise.then(function() {
+    var promise = id ? api.admin.updateCategory(parseInt(id), fd) : api.admin.createCategory(fd);
+    promise.then(function(resp) {
         bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
         showToast(id ? 'Category updated!' : 'Category created!', 'success');
+        if (resp && resp.warning) showToast(resp.warning, 'warning');
         renderCategories();
         refreshCategoryFilter();
     }).catch(function(err) {

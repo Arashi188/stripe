@@ -215,13 +215,13 @@ api.admin = {
         const qs = query.toString();
         return api.request(`/admin/products${qs ? '?' + qs : ''}`);
     },
-    createProduct: (data) => api.request('/admin/products', { method: 'POST', body: JSON.stringify(data) }),
-    updateProduct: (id, data) => api.request(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    createProduct: (formData) => api.request('/admin/products', { method: 'POST', body: formData }),
+    updateProduct: (id, formData) => api.request(`/admin/products/${id}`, { method: 'PUT', body: formData }),
     deleteProduct: (id) => api.request(`/admin/products/${id}`, { method: 'DELETE' }),
 
     getCategories: () => api.request('/admin/categories'),
-    createCategory: (data) => api.request('/admin/categories', { method: 'POST', body: JSON.stringify(data) }),
-    updateCategory: (id, data) => api.request(`/admin/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    createCategory: (formData) => api.request('/admin/categories', { method: 'POST', body: formData }),
+    updateCategory: (id, formData) => api.request(`/admin/categories/${id}`, { method: 'PUT', body: formData }),
     deleteCategory: (id) => api.request(`/admin/categories/${id}`, { method: 'DELETE' }),
 
     getStaff: () => api.request('/admin/staff'),
