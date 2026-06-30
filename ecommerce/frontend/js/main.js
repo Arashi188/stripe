@@ -756,6 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (result.user.role === 'ADMIN') redirect = 'admin/dashboard.html';
                     else if (result.user.role === 'SECRETARY') redirect = 'secretary-dashboard.html';
                     else if (result.user.role === 'DELIVERY_MAN') redirect = 'delivery-dashboard.html';
+                    else if (result.user.role === 'WAREHOUSE') redirect = 'warehouse-dashboard.html';
                     else redirect = 'index.html';
                 }
                 var firstName = getFirstName(result.user.fullName);
@@ -802,9 +803,11 @@ document.addEventListener('DOMContentLoaded', () => {
         var adminLink = document.getElementById('adminLink');
         var secLink = document.getElementById('secretaryLink');
         var delLink = document.getElementById('deliveryLink');
+        var whLink = document.getElementById('warehouseLink');
         if (role === 'ADMIN' && adminLink) adminLink.style.display = 'block';
         if (role === 'SECRETARY' && secLink) secLink.style.display = 'block';
         if (role === 'DELIVERY_MAN' && delLink) delLink.style.display = 'block';
+        if (role === 'WAREHOUSE' && whLink) whLink.style.display = 'block';
     }
 
     // Init animations

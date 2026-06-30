@@ -52,11 +52,6 @@ const auth = {
         return user ? user.role : null;
     },
 
-    isAdmin: () => {
-        const user = auth.getUser();
-        return user && user.role === 'ADMIN';
-    },
-
     clearSession: () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -73,10 +68,14 @@ const auth = {
         }
     },
 
+    isAdmin: () => {
+        const user = auth.getUser();
+        return user && user.role === 'ADMIN';
+    },
+
     redirectIfNotAdmin: () => {
-        auth.redirectIfNotLoggedIn();
-        if (!auth.isAdmin()) {
-            window.location.href = 'index.html';
+        if (!auth.isLoggedIn() || !auth.isAdmin()) {
+            window.location.href = 'login.html';
         }
     },
 
@@ -87,7 +86,6 @@ const auth = {
         const loginLink = document.getElementById('loginLink');
         const userMenu = document.getElementById('userMenu');
         const userName = document.getElementById('userName');
-        const adminLink = document.getElementById('adminLink');
         const logoutBtn = document.getElementById('logoutBtn');
         const cartCount = document.getElementById('cartCount');
 
@@ -108,12 +106,14 @@ const auth = {
                 avatarEl.textContent = initials;
             }
         }
-        if (adminLink) adminLink.style.display = isLoggedIn && user && user.role === 'ADMIN' ? 'block' : 'none';
-
+        const adminLink = document.getElementById('adminLink');
         const secLink = document.getElementById('secretaryLink');
         const delLink = document.getElementById('deliveryLink');
+        const whLink = document.getElementById('warehouseLink');
+        if (adminLink) adminLink.style.display = isLoggedIn && user && user.role === 'ADMIN' ? 'block' : 'none';
         if (secLink) secLink.style.display = isLoggedIn && user && user.role === 'SECRETARY' ? 'block' : 'none';
         if (delLink) delLink.style.display = isLoggedIn && user && user.role === 'DELIVERY_MAN' ? 'block' : 'none';
+        if (whLink) whLink.style.display = isLoggedIn && user && user.role === 'WAREHOUSE' ? 'block' : 'none';
 
         if (logoutBtn) {
             logoutBtn.addEventListener('click', (e) => {

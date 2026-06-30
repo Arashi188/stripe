@@ -1,6 +1,5 @@
 from flask import Blueprint, request
 from app.models import Product
-from app.routes.admin import admin_required
 
 products_bp = Blueprint('products', __name__)
 

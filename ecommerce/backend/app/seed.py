@@ -41,15 +41,6 @@ def seed_data():
             print('Database already seeded. Skipping.')
             return
 
-        # Admin user
-        admin = User(
-            email='admin@shoppremium.com',
-            password=generate_password_hash('admin123'),
-            full_name='Admin User',
-            role='ADMIN',
-        )
-        db.session.add(admin)
-
         # Regular user
         user = User(
             email='user@example.com',
@@ -180,7 +171,6 @@ def seed_data():
 
         db.session.commit()
         print('Database seeded successfully!')
-        print('Admin:        admin@shoppremium.com / admin123')
         print('User:         user@example.com / user123')
         print('Secretary:    secretary@shoppremium.com / secretary123')
         print('Delivery Man: delivery@shoppremium.com / delivery123')

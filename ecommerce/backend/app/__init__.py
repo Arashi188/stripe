@@ -56,11 +56,11 @@ def create_app(config_name='development'):
     from app.routes.orders import orders_bp
     from app.routes.users import users_bp
     from app.routes.reviews import reviews_bp
-    from app.routes.admin import admin_bp
     from app.routes.upload import upload_bp
     from app.routes.secretary import secretary_bp
     from app.routes.delivery import delivery_bp
     from app.routes.tracking import tracking_bp
+    from app.routes.admin import admin_bp
     from app.routes.warehouse import warehouse_bp
     from app.routes.chat import chat_bp
 
@@ -74,8 +74,8 @@ def create_app(config_name='development'):
     app.register_blueprint(tracking_bp, url_prefix='/api/tracking')
     app.register_blueprint(users_bp, url_prefix='/api/users')
     app.register_blueprint(reviews_bp, url_prefix='/api/reviews')
-    app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(upload_bp, url_prefix='/api/upload')
+    app.register_blueprint(admin_bp)
     app.register_blueprint(warehouse_bp)
     app.register_blueprint(chat_bp)
 

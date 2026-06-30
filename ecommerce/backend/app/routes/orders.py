@@ -116,9 +116,7 @@ def get_order(order_id):
     user_id = int(get_jwt_identity())
     order = Order.query.get_or_404(order_id)
     if order.user_id != user_id:
-        user = User.query.get(user_id)
-        if user.role != 'ADMIN':
-            return {'error': 'Unauthorized'}, 403
+        return {'error': 'Unauthorized'}, 403
     return _order_json(order)
 
 
@@ -165,7 +163,7 @@ def upload_receipt(order_id):
 def get_receipt(order_id):
     user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
-    if not user or user.role not in ('SECRETARY', 'ADMIN'):
+    if not user or user.role != 'SECRETARY':
         return {'error': 'Access denied'}, 403
     order = Order.query.get_or_404(order_id)
     if not order.receipt_url:
@@ -183,7 +181,7 @@ def get_receipt(order_id):
 def get_scan_results(order_id):
     user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
-    if not user or user.role not in ('SECRETARY', 'ADMIN'):
+    if not user or user.role != 'SECRETARY':
         return {'error': 'Access denied'}, 403
     order = Order.query.get_or_404(order_id)
     details = json.loads(order.receipt_scan_details) if order.receipt_scan_details else None

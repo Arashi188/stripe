@@ -13,7 +13,7 @@ def warehouse_required(fn):
     @jwt_required()
     def wrapper(*args, **kwargs):
         user = User.query.get(int(get_jwt_identity()))
-        if not user or user.role not in ('WAREHOUSE', 'ADMIN'):
+        if not user or user.role != 'WAREHOUSE':
             return {'error': 'Warehouse access required'}, 403
         return fn(*args, **kwargs)
     return wrapper
@@ -25,7 +25,7 @@ def warehouse_or_secretary_required(fn):
     @jwt_required()
     def wrapper(*args, **kwargs):
         user = User.query.get(int(get_jwt_identity()))
-        if not user or user.role not in ('WAREHOUSE', 'SECRETARY', 'ADMIN'):
+        if not user or user.role not in ('WAREHOUSE', 'SECRETARY'):
             return {'error': 'Warehouse or Secretary access required'}, 403
         return fn(*args, **kwargs)
     return wrapper

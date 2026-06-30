@@ -13,7 +13,7 @@ def secretary_required(fn):
     @jwt_required()
     def wrapper(*args, **kwargs):
         user = User.query.get(int(get_jwt_identity()))
-        if not user or user.role not in ('SECRETARY', 'ADMIN'):
+        if not user or user.role != 'SECRETARY':
             return {'error': 'Secretary access required'}, 403
         return fn(*args, **kwargs)
     return wrapper
@@ -84,14 +84,6 @@ def approve_payment(order_id):
     order.paid_at = datetime.now(timezone.utc)
     if not order.tracking_id:
         order.generate_tracking_id()
-    admins = User.query.filter_by(role='ADMIN').all()
-    for admin in admins:
-        db.session.add(Notification(
-            user_id=admin.id,
-            order_id=order.id,
-            message=f'Payment approved for Order #{order.order_number}',
-            is_urgent=False,
-        ))
     db.session.commit()
     return {
         'status': 'success',
@@ -177,6 +169,39 @@ def send_to_warehouse():
         order.status = 'IN_WAREHOUSE'
     db.session.commit()
     return {'message': 'Order sent to warehouse', 'task_id': task.id}
+
+
+@secretary_bp.route('/notifications', methods=['GET'])
+@secretary_required
+def get_notifications():
+    user_id = int(get_jwt_identity())
+    notifs = Notification.query.filter_by(user_id=user_id, is_read=False)\
+        .order_by(Notification.created_at.desc()).all()
+    return [{
+        'id': n.id,
+        'message': n.message,
+        'orderId': n.order_id,
+        'isUrgent': n.is_urgent,
+        'createdAt': n.created_at.isoformat(),
+    } for n in notifs]
+
+
+@secretary_bp.route('/notifications/<int:notif_id>/read', methods=['POST'])
+@secretary_required
+def mark_notification_read(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+    notif.is_read = True
+    db.session.commit()
+    return {'status': 'success'}
+
+
+@secretary_bp.route('/notifications/read-all', methods=['POST'])
+@secretary_required
+def mark_all_read():
+    user_id = int(get_jwt_identity())
+    Notification.query.filter_by(user_id=user_id, is_read=False).update({'is_read': True})
+    db.session.commit()
+    return {'status': 'success'}
 
 
 @secretary_bp.route('/bank-accounts', methods=['GET'])
