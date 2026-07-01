@@ -1849,10 +1849,11 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
 
 /* ── Nav icons group ── */
 .nav-icons-group {
-    background: #f0f2f5;
+    background: #1e1e2e;
     border-radius: 50px;
     padding: 3px 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     gap: 2px;
     align-items: center;
 }
@@ -1867,15 +1868,15 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
     border-radius: 50px;
     border: none;
     background: transparent;
-    color: #000;
+    color: #f1f1f1;
     text-decoration: none;
     transition: all 0.2s ease;
     position: relative;
     white-space: nowrap;
 }
 .nav-icon-btn:hover {
-    background: rgba(13, 110, 253, 0.08);
-    color: #0d6efd;
+    background: rgba(255,255,255,0.1);
+    color: #ffffff;
     transform: translateY(-1px);
 }
 .nav-icon-btn:active {
