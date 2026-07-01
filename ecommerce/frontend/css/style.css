@@ -1644,7 +1644,8 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
     .navbar-collapse .nav-icon-btn:hover { color: var(--primary-light) !important; }
     .navbar-collapse .dropdown-arrow { color: #fff; }
     .navbar-collapse .nav-icons .btn { background: transparent; border-color: rgba(255,255,255,0.2); color: #fff; }
-    .nav-icons { margin-top: 0.5rem; }
+    .nav-icons { margin-top: 0; }
+    .nav-icons-group { flex-shrink: 0; }
     .user-name-text { color: #fff; }
 }
 
@@ -1849,13 +1850,14 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
 
 /* ── Nav icons group ── */
 .nav-icons-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     background: #1e1e2e;
     border-radius: 50px;
     padding: 3px 6px;
     border: 1px solid rgba(255,255,255,0.1);
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    gap: 2px;
-    align-items: center;
 }
 
 /* ── Nav icon buttons ── */
@@ -1873,6 +1875,7 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
     transition: all 0.2s ease;
     position: relative;
     white-space: nowrap;
+    line-height: 1;
 }
 .nav-icon-btn:hover {
     background: rgba(255,255,255,0.1);
@@ -1884,7 +1887,7 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
 }
 .nav-icon-btn.dropdown-toggle {
     padding: 0 10px;
-    gap: 4px;
+    gap: 6px;
 }
 
 /* ── User avatar ── */
@@ -1910,13 +1913,18 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
 
 /* ── User name text ── */
 .user-name-text {
-    margin-left: 6px;
     font-size: 0.85rem;
     font-weight: 500;
     max-width: 120px;
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1;
+}
+
+/* Dropdown wrapper inside icons group — align as flex item */
+.nav-icons-group .dropdown {
+    display: flex;
+    align-items: center;
 }
 
 /* Ensure all icon-fonts inside nav-icon-btn are vertically centered */
@@ -1939,8 +1947,8 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
 /* ── Cart badge with pulse animation ── */
 .cart-badge {
     position: absolute;
-    top: -3px;
-    right: -3px;
+    top: -6px;
+    right: -6px;
     background: #dc3545;
     color: #fff;
     font-size: 0.6rem;
@@ -1953,6 +1961,7 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
     justify-content: center;
     padding: 0 5px;
     transition: transform 0.15s ease;
+    z-index: 1;
 }
 .cart-badge.pulse {
     animation: badgePulse 0.4s ease;
