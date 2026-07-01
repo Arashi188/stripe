@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from functools import wraps
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func
 from app import db
@@ -203,7 +203,8 @@ def create_product():
             'imageUrl': product.image_url,
         }
         if upload_warning:
-            response['warning'] = 'Created successfully, but image upload failed. You can add an image later by editing it.'
+            current_app.logger.warning('Product create image upload failed: %s', upload_warning)
+            response['warning'] = 'Product created, but image upload failed: ' + upload_warning
         return response, 201
     except Exception:
         db.session.rollback()
@@ -264,7 +265,8 @@ def update_product(product_id):
             'imageUrl': product.image_url,
         }
         if upload_warning:
-            response['warning'] = 'Updated successfully, but image upload failed.'
+            current_app.logger.warning('Product update image upload failed: %s', upload_warning)
+            response['warning'] = 'Product updated, but image upload failed: ' + upload_warning
         return response
     except Exception:
         db.session.rollback()
@@ -380,7 +382,8 @@ def create_category():
             'productCount': 0,
         }
         if upload_warning:
-            response['warning'] = 'Created successfully, but image upload failed. You can add an image later by editing it.'
+            current_app.logger.warning('Category create image upload failed: %s', upload_warning)
+            response['warning'] = 'Category created, but image upload failed: ' + upload_warning
         return response, 201
     except Exception:
         db.session.rollback()
@@ -425,7 +428,8 @@ def update_category(category_id):
             'productCount': len(cat.products),
         }
         if upload_warning:
-            response['warning'] = 'Updated successfully, but image upload failed.'
+            current_app.logger.warning('Category update image upload failed: %s', upload_warning)
+            response['warning'] = 'Category updated, but image upload failed: ' + upload_warning
         return response
     except Exception:
         db.session.rollback()
