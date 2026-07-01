@@ -93,7 +93,7 @@ def seed_data():
         ]
         categories = []
         for name, desc, img in categories_data:
-            c = Category(name=name, description=desc, image_url=img)
+            c = Category(name=name, description=desc, image_url=img, background_image_url=img)
             db.session.add(c)
             categories.append(c)
         db.session.flush()

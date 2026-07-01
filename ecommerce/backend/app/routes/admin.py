@@ -335,6 +335,7 @@ def get_categories():
             'name': c.name,
             'description': c.description,
             'imageUrl': c.image_url,
+            'backgroundImageUrl': c.background_image_url,
             'productCount': len(c.products),
             'isActive': c.is_active,
             'createdAt': c.created_at.isoformat() if hasattr(c, 'created_at') and c.created_at else None,
@@ -371,6 +372,7 @@ def create_category():
             name=name,
             description=(data.get('description') or '').strip(),
             image_url=image_url,
+            background_image_url=image_url,
         )
         db.session.add(cat)
         db.session.commit()
@@ -379,6 +381,7 @@ def create_category():
             'name': cat.name,
             'description': cat.description,
             'imageUrl': cat.image_url,
+            'backgroundImageUrl': cat.background_image_url,
             'productCount': 0,
         }
         if upload_warning:
@@ -415,7 +418,9 @@ def update_category(category_id):
         upload_warning = None
         if file and file.filename:
             try:
-                cat.image_url = upload_image(file, 'categories')
+                uploaded = upload_image(file, 'categories')
+                cat.image_url = uploaded
+                cat.background_image_url = uploaded
             except (ValueError, RuntimeError) as e:
                 upload_warning = str(e)
 
@@ -425,6 +430,7 @@ def update_category(category_id):
             'name': cat.name,
             'description': cat.description,
             'imageUrl': cat.image_url,
+            'backgroundImageUrl': cat.background_image_url,
             'productCount': len(cat.products),
         }
         if upload_warning:

@@ -385,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const categories = await api.getCategories();
             container.innerHTML = categories.map(cat => `
                 <div class="col-md-4 col-sm-6 mb-4">
-                    <div class="category-card fade-in" onclick="window.location.href='shop.html?category=${cat.id}'" style="background-image:url('${cat.backgroundImageUrl || PLACEHOLDER_IMG}')">
+                    <div class="category-card fade-in" onclick="window.location.href='shop.html?category=${cat.id}'" style="background-image:url('${cat.backgroundImageUrl || cat.imageUrl || PLACEHOLDER_IMG}')">
                         <div class="overlay">
                             <h4>${cat.name}</h4>
                             <p>${cat.description || 'Explore collection'}</p>
