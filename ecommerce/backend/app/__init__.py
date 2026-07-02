@@ -3,10 +3,12 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
+from flask_socketio import SocketIO
 from config import config_by_name
 
 db = SQLAlchemy()
 jwt = JWTManager()
+socketio = SocketIO(cors_allowed_origins='*')
 
 
 def create_app(config_name='development'):
@@ -18,7 +20,20 @@ def create_app(config_name='development'):
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
     os.makedirs(upload_dir, exist_ok=True)
 
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": [
+                "https://stripe-two-dun.vercel.app",
+                "http://127.0.0.1:5500",
+                "http://localhost:5500",
+                "http://127.0.0.1:5501",
+                "http://localhost:5501",
+            ],
+            "supports_credentials": True,
+            "allow_headers": ["Content-Type", "Authorization"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        }
+    })
     db.init_app(app)
     jwt.init_app(app)
 
@@ -41,11 +56,13 @@ def create_app(config_name='development'):
     from app.routes.orders import orders_bp
     from app.routes.users import users_bp
     from app.routes.reviews import reviews_bp
-    from app.routes.admin import admin_bp
     from app.routes.upload import upload_bp
     from app.routes.secretary import secretary_bp
     from app.routes.delivery import delivery_bp
     from app.routes.tracking import tracking_bp
+    from app.routes.admin import admin_bp
+    from app.routes.warehouse import warehouse_bp
+    from app.routes.chat import chat_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(products_bp, url_prefix='/api/products')
@@ -57,8 +74,10 @@ def create_app(config_name='development'):
     app.register_blueprint(tracking_bp, url_prefix='/api/tracking')
     app.register_blueprint(users_bp, url_prefix='/api/users')
     app.register_blueprint(reviews_bp, url_prefix='/api/reviews')
-    app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(upload_bp, url_prefix='/api/upload')
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(warehouse_bp)
+    app.register_blueprint(chat_bp)
 
     @app.route('/uploads/<path:filename>')
     def serve_upload(filename):
@@ -80,5 +99,12 @@ def create_app(config_name='development'):
         db.create_all()
         from app.migrate import run_migrations
         run_migrations()
+
+        from app.seed import create_admin_if_not_exists
+        create_admin_if_not_exists()
+
+    socketio.init_app(app)
+    from app.socket_events import register_socket_handlers
+    register_socket_handlers(socketio)
 
     return app

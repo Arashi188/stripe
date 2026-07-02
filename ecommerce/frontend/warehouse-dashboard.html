@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Dashboard - GREAT WALL intl</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .task-card { border-left: 4px solid #ffc107; transition: all .2s; }
+        .task-card.packed { border-left-color: #198754; opacity: .7; }
+        .task-card:hover { background: #f8f9ff; }
+        .order-items-list { font-size: .85rem; color: #6c757d; }
+        .order-items-list li { padding: .15rem 0; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white" style="box-shadow:var(--shadow)">
+    <div class="container">
+        <a class="navbar-brand" href="index.html"><img src="images/logo.png" alt="GREAT WALL intl" height="36"></a>
+        <div class="nav-icons d-flex align-items-center">
+            <div class="nav-icons-group d-flex align-items-center">
+                <div class="dropdown">
+                    <a class="nav-icon-btn rounded-pill dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown">
+                        <div class="user-avatar" id="userAvatar">?</div>
+                        <i class="fas fa-chevron-down dropdown-arrow ms-1"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="warehouse-dashboard.html">Dashboard</a></li>
+                        <li id="adminLink" style="display:none"><a class="dropdown-item" href="admin/dashboard.html">Admin Panel</a></li>
+                        <li id="secretaryLink" style="display:none"><a class="dropdown-item" href="secretary-dashboard.html">Secretary Panel</a></li>
+                        <li id="deliveryLink" style="display:none"><a class="dropdown-item" href="delivery-dashboard.html">Delivery Panel</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="logoutBtn">Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<section class="dashboard-section" style="padding-top:100px;padding-bottom:40px">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Warehouse Dashboard</h2>
+                <p class="text-muted mb-0">Pack orders and manage inventory tasks</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary btn-sm" id="showAllBtn">All</button>
+                <button class="btn btn-outline-warning btn-sm" id="showPendingBtn">Pending</button>
+                <button class="btn btn-outline-success btn-sm" id="showPackedBtn">Packed</button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-warning bg-opacity-10">
+                    <div class="card-body text-center">
+                        <h3 class="fw-bold mb-1" id="pendingCount">0</h3>
+                        <small class="text-muted">Pending Tasks</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-success bg-opacity-10">
+                    <div class="card-body text-center">
+                        <h3 class="fw-bold mb-1" id="packedCount">0</h3>
+                        <small class="text-muted">Packed</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-primary bg-opacity-10">
+                    <div class="card-body text-center">
+                        <h3 class="fw-bold mb-1" id="totalCount">0</h3>
+                        <small class="text-muted">Total Tasks</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="fw-bold mb-0"><i class="fas fa-boxes me-2"></i>Warehouse Tasks</h5>
+            </div>
+            <div class="card-body" id="tasksList">
+                <div class="loading-spinner"><div class="spinner"></div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Order Detail Modal -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order #<span id="detailOrderNumber"></span></h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetailBody">
+                <div class="loading-spinner"><div class="spinner"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/main.js"></script>
+<script src="js/page-transitions.js"></script>
+
+<script>
+var currentFilter = '';
+
+function loadTasks(filter) {
+    currentFilter = filter || '';
+    api.warehouse.getTasks(currentFilter).then(function(tasks) {
+        var pending = tasks.filter(function(t) { return t.status === 'PENDING'; }).length;
+        var packed = tasks.filter(function(t) { return t.status === 'PACKED'; }).length;
+        document.getElementById('pendingCount').textContent = pending;
+        document.getElementById('packedCount').textContent = packed;
+        document.getElementById('totalCount').textContent = tasks.length;
+
+        var container = document.getElementById('tasksList');
+        if (tasks.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-box-open fa-2x mb-2 d-block"></i><span>No tasks yet</span></div>';
+            return;
+        }
+        container.innerHTML = tasks.map(function(t) {
+            var isPacked = t.status === 'PACKED';
+            return '<div class="task-card card border-0 bg-light mb-2 p-3' + (isPacked ? ' packed' : '') + '">' +
+                '<div class="d-flex justify-content-between align-items-start">' +
+                '<div><strong>Order #' + t.order_number + '</strong><br><small class="text-muted">Sent by: ' + t.sender_name + '</small></div>' +
+                '<span class="badge bg-' + (isPacked ? 'success' : 'warning') + '">' + t.status + '</span>' +
+                '</div>' +
+                (t.items_summary ? '<div class="mt-1"><small class="text-muted">Items: ' + t.items_summary + '</small></div>' : '') +
+                (t.notes ? '<div class="mt-1"><small class="fst-italic">Notes: ' + t.notes + '</small></div>' : '') +
+                '<div class="mt-2 d-flex gap-2">' +
+                '<button class="btn btn-outline-info btn-sm" onclick="viewOrderDetail(' + t.order_id + ', \'' + t.order_number + '\')"><i class="fas fa-eye me-1"></i>View</button>' +
+                (isPacked
+                    ? '<button class="btn btn-outline-secondary btn-sm" onclick="undoPack(' + t.id + ')"><i class="fas fa-undo me-1"></i>Unpack</button>'
+                    : '<button class="btn btn-success btn-sm" onclick="markPacked(' + t.id + ')"><i class="fas fa-box me-1"></i>Mark Packed</button>') +
+                '</div>' +
+                '<small class="text-muted d-block mt-1">Created: ' + new Date(t.created_at).toLocaleString() + '</small>' +
+                (t.packed_at ? '<small class="text-success d-block">Packed: ' + new Date(t.packed_at).toLocaleString() + '</small>' : '') +
+                '</div>';
+        }).join('');
+    }).catch(function(err) {
+        document.getElementById('tasksList').innerHTML = '<div class="alert alert-danger">' + err.message + '</div>';
+    });
+}
+
+function markPacked(taskId) {
+    api.warehouse.markPacked(taskId).then(function() {
+        loadTasks(currentFilter);
+        if (typeof cartManager !== 'undefined' && cartManager.showToast) {
+            cartManager.showToast('Task marked as packed!', 'success');
+        }
+    }).catch(function(err) {
+        if (typeof cartManager !== 'undefined' && cartManager.showToast) {
+            cartManager.showToast(err.message, 'error');
+        }
+    });
+}
+
+function undoPack(taskId) {
+    api.warehouse.undoPack(taskId).then(function() {
+        loadTasks(currentFilter);
+        if (typeof cartManager !== 'undefined' && cartManager.showToast) {
+            cartManager.showToast('Task reverted to pending', 'info');
+        }
+    }).catch(function(err) {
+        if (typeof cartManager !== 'undefined' && cartManager.showToast) {
+            cartManager.showToast(err.message, 'error');
+        }
+    });
+}
+
+function viewOrderDetail(orderId, orderNumber) {
+    document.getElementById('detailOrderNumber').textContent = orderNumber;
+    var body = document.getElementById('orderDetailBody');
+    body.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+    api.warehouse.getOrderDetail(orderId).then(function(data) {
+        var html = '<p><strong>Status:</strong> ' + data.status + '</p>';
+        if (data.items && data.items.length > 0) {
+            html += '<h6 class="fw-bold mt-3">Items</h6><ul class="list-group">';
+            data.items.forEach(function(item) {
+                var img = item.product_image ? '<img src="' + resolveImageUrl(item.product_image) + '" style="width:50px;height:50px;object-fit:cover;border-radius:6px;margin-right:10px">' : '';
+                html += '<li class="list-group-item d-flex align-items-center">' +
+                    img +
+                    '<div><strong>' + item.product_name + '</strong><br><small>x' + item.quantity + ' — ₦' + (item.price * item.quantity).toFixed(2) + '</small></div>' +
+                    '</li>';
+            });
+            html += '</ul>';
+        }
+        body.innerHTML = html;
+    }).catch(function(err) {
+        body.innerHTML = '<div class="alert alert-danger">' + err.message + '</div>';
+    });
+    new bootstrap.Modal(document.getElementById('orderDetailModal')).show();
+}
+
+document.getElementById('showAllBtn').addEventListener('click', function() { loadTasks(''); });
+document.getElementById('showPendingBtn').addEventListener('click', function() { loadTasks('PENDING'); });
+document.getElementById('showPackedBtn').addEventListener('click', function() { loadTasks('PACKED'); });
+
+document.addEventListener('DOMContentLoaded', function() {
+    auth.redirectIfNotLoggedIn();
+    var user = auth.getUser();
+    if (user && user.role !== 'WAREHOUSE' && user.role !== 'ADMIN') {
+        window.location.href = 'index.html';
+        return;
+    }
+    loadTasks();
+    setInterval(function() { loadTasks(currentFilter); }, 30000);
+});
+</script>
+</body>
+</html>

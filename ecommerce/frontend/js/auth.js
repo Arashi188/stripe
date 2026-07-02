@@ -108,8 +108,9 @@ const auth = {
         const logoutBtn = document.getElementById('logoutBtn');
         const cartCount = document.getElementById('cartCount');
 
-        if (loginLink) loginLink.style.display = isLoggedIn ? 'none' : 'block';
-        if (userMenu) userMenu.style.display = isLoggedIn ? 'block' : 'none';
+        // These controls are flex items; using "block" breaks vertical icon centering.
+        if (loginLink) loginLink.style.display = isLoggedIn ? 'none' : 'flex';
+        if (userMenu) userMenu.style.display = isLoggedIn ? 'flex' : 'none';
 
         // FIX: Truncate long names so they don't overflow the navbar
         if (userName && user) {

@@ -36,6 +36,7 @@ class Category(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.String(255))
     image_url = db.Column(db.String(500))
+    background_image_url = db.Column(db.String(500))
     is_active = db.Column(db.Boolean, default=True)
 
     products = db.relationship('Product', backref='category', lazy=True)
@@ -199,6 +200,55 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     order = db.relationship('Order', lazy=True)
+
+
+class WarehouseTask(db.Model):
+    __tablename__ = 'warehouse_tasks'
+
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    sent_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    status = db.Column(db.String(20), default='PENDING')
+    items_summary = db.Column(db.Text)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    packed_at = db.Column(db.DateTime)
+
+    order = db.relationship('Order', lazy=True)
+    sender = db.relationship('User', lazy=True)
+
+
+class ChatConversation(db.Model):
+    __tablename__ = 'chat_conversations'
+
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    secretary_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    delivery_man_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    last_message_at = db.Column(db.DateTime)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    order = db.relationship('Order', lazy=True)
+    secretary = db.relationship('User', foreign_keys=[secretary_id], lazy=True)
+    delivery_man = db.relationship('User', foreign_keys=[delivery_man_id], lazy=True)
+    messages = db.relationship('ChatMessage', backref='conversation', lazy=True, cascade='all, delete-orphan',
+                                order_by='ChatMessage.created_at')
+
+
+class ChatMessage(db.Model):
+    __tablename__ = 'chat_messages'
+
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('chat_conversations.id'), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    message_text = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    sender = db.relationship('User', foreign_keys=[sender_id], lazy=True)
+    receiver = db.relationship('User', foreign_keys=[receiver_id], lazy=True)
 
 
 class BankAccount(db.Model):

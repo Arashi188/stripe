@@ -2,7 +2,228 @@
 // Main Application Script
 // =============================================
 
+function togglePassword(inputId, btn) {
+    var input = document.getElementById(inputId);
+    if (!input) return;
+    var icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+function getInitials(name) {
+    if (!name) return '?';
+    var parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+}
+
+function updateAvatar() {
+    var user = auth.getUser();
+    var avatarEl = document.getElementById('userAvatar');
+    var nameEl = document.getElementById('userName');
+    if (avatarEl) {
+        var storedIcon = localStorage.getItem('userIcon');
+        if (storedIcon) {
+            avatarEl.innerHTML = '<i class="fas ' + storedIcon + '"></i>';
+        } else {
+            avatarEl.textContent = user ? getInitials(user.fullName) : '?';
+        }
+    }
+    if (nameEl && user) {
+        nameEl.textContent = user.fullName;
+    }
+}
+
+// Page transition overlay
+(function() {
+    var overlay = document.createElement('div');
+    overlay.className = 'page-transition';
+    overlay.id = 'pageTransition';
+    document.body.appendChild(overlay);
+})();
+
+function navigateWithTransition(url) {
+    var overlay = document.getElementById('pageTransition');
+    if (overlay) {
+        overlay.classList.add('active');
+        setTimeout(function() { window.location.href = url; }, 200);
+    } else {
+        window.location.href = url;
+    }
+}
+
+// ── Animation helpers ──
+var ANIM_OBSERVER = null;
+
+function initScrollReveal() {
+    if (ANIM_OBSERVER) { ANIM_OBSERVER.disconnect(); }
+    ANIM_OBSERVER = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('show');
+                ANIM_OBSERVER.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal, .fade-in, .section-stagger, .product-card-3d').forEach(function(el) {
+        ANIM_OBSERVER.observe(el);
+    });
+}
+
+function triggerShake(el) {
+    if (!el) return;
+    el.classList.remove('shake');
+    void el.offsetWidth;
+    el.classList.add('shake');
+    setTimeout(function() { el.classList.remove('shake'); }, 500);
+}
+
+function addRipple(e) {
+    var btn = e.currentTarget;
+    if (btn.classList.contains('btn-loading')) return;
+    var rect = btn.getBoundingClientRect();
+    var ripple = document.createElement('span');
+    ripple.className = 'ripple-effect';
+    var size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    btn.appendChild(ripple);
+    setTimeout(function() { ripple.remove(); }, 600);
+}
+
+function addRippleToButtons() {
+    document.querySelectorAll('.btn-primary, .btn-checkout, .add-to-cart-btn, [onclick*="addItem"], [onclick*="checkout"]').forEach(function(btn) {
+        btn.classList.add('ripple-container');
+        btn.addEventListener('click', addRipple);
+    });
+}
+
+function staggerReveal(cards, baseDelay) {
+    if (!cards || !cards.length) return;
+    cards.forEach(function(el, i) {
+        el.style.transitionDelay = (baseDelay || 0.05) * i + 's';
+        ANIM_OBSERVER.observe(el);
+    });
+}
+
+// Toast notification system (enhanced)
+function showToast(message, type) {
+    if (typeof cartManager !== 'undefined' && cartManager.showToast) {
+        cartManager.showToast(message, type);
+        return;
+    }
+    // Fallback if cartManager not available
+    var container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    var toast = document.createElement('div');
+    toast.className = 'toast-custom ' + (type || 'success');
+    var icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+    toast.innerHTML = '<div class="d-flex align-items-center"><i class="fas ' + icon + ' me-2"></i><span>' + message + '</span></div>';
+    container.appendChild(toast);
+    setTimeout(function() {
+        toast.classList.add('removing');
+        setTimeout(function() { toast.remove(); }, 250);
+    }, 2500);
+}
+
+// ── Button loading state ──
+function setButtonLoading(btn, isLoading) {
+    if (!btn) return;
+    if (isLoading) {
+        btn._originalHTML = btn.innerHTML;
+        btn.classList.add('btn-loading');
+        btn.innerHTML = '<span class="btn-text">' + btn._originalHTML + '</span><span class="btn-spinner"><i class="fas fa-spinner fa-spin"></i></span>';
+        btn.disabled = true;
+    } else {
+        btn.classList.remove('btn-loading');
+        if (btn._originalHTML) {
+            btn.innerHTML = btn._originalHTML;
+        }
+        btn.disabled = false;
+    }
+}
+
+// ── Welcome overlay ──
+function showWelcomeOverlay(message, iconClass, redirectUrl, delay) {
+    var existing = document.getElementById('welcomeOverlay');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'welcomeOverlay';
+    overlay.className = 'welcome-overlay';
+    overlay.innerHTML =
+        '<div class="welcome-card">' +
+            '<div class="welcome-icon"><i class="fas ' + iconClass + '"></i></div>' +
+            '<div class="welcome-text">' + message + '</div>' +
+        '</div>';
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(function() {
+        overlay.classList.add('show');
+    });
+
+    var stay = delay || 1800;
+    setTimeout(function() {
+        overlay.classList.remove('show');
+        setTimeout(function() {
+            window.location.href = redirectUrl;
+        }, 350);
+    }, stay);
+}
+
+// ── Get first name from full name ──
+function getFirstName(fullName) {
+    if (!fullName) return '';
+    return fullName.trim().split(/\s+/)[0] || '';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+
+    // Keep the mobile navigation accessible and visually in sync.
+    document.querySelectorAll('.navbar-toggler').forEach(function(toggler) {
+        toggler.setAttribute('aria-label', 'Open navigation menu');
+        toggler.addEventListener('click', function() {
+            requestAnimationFrame(function() {
+                var isOpen = toggler.getAttribute('aria-expanded') === 'true';
+                toggler.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+                document.body.classList.toggle('nav-menu-open', isOpen);
+            });
+        });
+    });
+
+    document.querySelectorAll('.navbar-collapse').forEach(function(menu) {
+        menu.addEventListener('hidden.bs.collapse', function() {
+            document.body.classList.remove('nav-menu-open');
+            var toggler = document.querySelector('[data-bs-target="#' + menu.id + '"]');
+            if (toggler) toggler.setAttribute('aria-label', 'Open navigation menu');
+        });
+        menu.querySelectorAll('.nav-link:not(.dropdown-toggle)').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth < 992 && window.bootstrap) {
+                    bootstrap.Collapse.getOrCreateInstance(menu).hide();
+                }
+            });
+        });
+    });
+
+    // Page load fade-in
+    var pageContent = document.querySelector('.hero-section, .account-header, .page-header, .dashboard-content, main, .container:first-of-type');
+    if (pageContent) {
+        pageContent.classList.add('fade-in-page');
+        setTimeout(function() { pageContent.classList.add('show'); }, 50);
+    }
 
     // Navbar scroll effect
     const navbar = document.querySelector('.navbar');
@@ -127,13 +348,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             container.innerHTML = products.map(product => `
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4 product-card-3d">
+                <div class="col-6 col-lg-3 col-md-4 col-sm-6 mb-4 product-card-3d">
                     <div class="product-card">
                         <div class="product-image">
-                            <img src="${resolveImageUrl(product.imageUrl) || 'https://via.placeholder.com/300x400'}" 
+                            <img src="${resolveImageUrl(product.imageUrl)}" 
                                  alt="${product.name}"
                                  loading="lazy"
-                                 onerror="this.src='https://via.placeholder.com/300x400'">
+                                 onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
                             ${product.compareAtPrice && product.compareAtPrice > product.price ? 
                                 '<span class="product-badge sale">Sale</span>' : ''}
                             <div class="product-actions">
@@ -191,8 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const categories = await api.getCategories();
             container.innerHTML = categories.map(cat => `
                 <div class="col-md-4 col-sm-6 mb-4">
-                    <div class="category-card fade-in" onclick="window.location.href='shop.html?category=${cat.id}'">
-                        <img src="${cat.imageUrl || 'https://via.placeholder.com/400x250'}" alt="${cat.name}" loading="lazy">
+                    <div class="category-card fade-in" onclick="window.location.href='shop.html?category=${cat.id}'" style="background-image:url('${cat.backgroundImageUrl || cat.imageUrl || PLACEHOLDER_IMG}')">
                         <div class="overlay">
                             <h4>${cat.name}</h4>
                             <p>${cat.description || 'Explore collection'}</p>
@@ -228,16 +448,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="row g-5">
                     <div class="col-lg-6">
                         <div class="product-gallery">
-                            <img src="${resolveImageUrl(product.imageUrl) || 'https://via.placeholder.com/600x600'}" 
+                            <img src="${resolveImageUrl(product.imageUrl)}" 
                                  alt="${product.name}" 
                                  class="main-image"
                                  id="mainImage"
-                                 onerror="this.src='https://via.placeholder.com/600x600'">
+                                 onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
                             <div class="thumbnails">
                                 ${[product.imageUrl, product.imageUrl2, product.imageUrl3].filter(Boolean).map((img, i) => `
                                     <img src="${resolveImageUrl(img)}" class="${i === 0 ? 'active' : ''}" 
                                          onclick="document.getElementById('mainImage').src=this.src;document.querySelectorAll('.thumbnails img').forEach(t=>t.classList.remove('active'));this.classList.add('active')"
-                                         onerror="this.style.display='none'">
+                                         onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
                                 `).join('')}
                             </div>
                         </div>
@@ -451,95 +671,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loadProductDetails();
     }
 
-    if (page === 'user-dashboard.html') {
-        auth.redirectIfNotLoggedIn();
-        const loadDashboard = async () => {
-            try {
-                const profile = await api.getProfile();
-                const orders = await api.getOrderHistory();
-                const wishlist = await api.getWishlist();
-
-                const initials = (profile.fullName || 'U').charAt(0).toUpperCase();
-                const completed = orders.filter(o => o.status === 'DELIVERED' || o.status === 'COMPLETED').length;
-
-                document.querySelectorAll('#userName, #greetingName, #profileName, #viewName').forEach(el => el.textContent = profile.fullName || 'User');
-                document.querySelectorAll('#userAvatar, #avatarInitials').forEach(el => el.textContent = initials);
-                document.querySelectorAll('#userEmail, #viewEmail, #profileEmail').forEach(el => el.textContent = profile.email || '-');
-
-                const phone = profile.phone || '-';
-                document.querySelectorAll('#userPhone, #viewPhone').forEach(el => el.textContent = phone);
-                const phoneEl = document.getElementById('profilePhone');
-                if (phoneEl) phoneEl.innerHTML = `<i class="fas fa-phone me-1"></i>${phone}`;
-
-                document.getElementById('totalOrders').textContent = orders.length;
-                document.getElementById('totalOrdersBadge').textContent = orders.length + ' Orders';
-                document.getElementById('wishlistCount').textContent = wishlist.length;
-                document.getElementById('pendingOrders').textContent = orders.filter(o => o.status === 'PENDING').length;
-                document.getElementById('pendingOrdersBadge').textContent = orders.filter(o => o.status === 'PENDING').length + ' Pending';
-                document.getElementById('completedOrders').textContent = completed;
-
-                const viewFields = { address: 'viewAddress', city: 'viewCity', state: 'viewState', zipCode: 'viewZip' };
-                Object.entries(viewFields).forEach(([key, id]) => {
-                    const el = document.getElementById(id);
-                    if (el) el.textContent = profile[key] || '-';
-                });
-
-                const editFields = { fullName: 'editName', phone: 'editPhone', address: 'editAddress', city: 'editCity', state: 'editState', zipCode: 'editZip', country: 'editCountry' };
-                Object.entries(editFields).forEach(([key, id]) => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = profile[key] || '';
-                });
-
-                const recentContainer = document.getElementById('recentOrdersList');
-                if (recentContainer) {
-                    const recentOrders = orders.slice(0, 3);
-                    if (recentOrders.length === 0) {
-                        recentContainer.innerHTML = `
-                            <div class="text-center text-muted py-4">
-                                <i class="fas fa-box-open fa-2x mb-2 d-block"></i>
-                                <span>No orders yet</span>
-                            </div>`;
-                    } else {
-                        recentContainer.innerHTML = recentOrders.map(o => `
-                            <div class="recent-order-item">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <strong class="d-block">#${o.orderNumber}</strong>
-                                        <small class="text-muted">${new Date(o.createdAt).toLocaleDateString()}</small>
-                                    </div>
-                                    <div class="text-end">
-                                        <span class="badge rounded-pill status-${o.status.toLowerCase()}">${o.status}</span>
-                                        <div class="fw-bold mt-1 text-primary">₦${o.totalAmount.toFixed(2)}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('');
-                    }
-                }
-            } catch (error) {
-                cartManager.showToast(error.message, 'error');
-            }
-        };
-        loadDashboard();
-
-        document.getElementById('profileForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                await api.updateProfile({
-                    fullName: document.getElementById('editName').value,
-                    phone: document.getElementById('editPhone').value,
-                    address: document.getElementById('editAddress').value,
-                    city: document.getElementById('editCity').value,
-                    state: document.getElementById('editState').value,
-                    zipCode: document.getElementById('editZip').value,
-                    country: document.getElementById('editCountry').value,
-                });
-                cartManager.showToast('Profile updated!', 'success');
-                loadDashboard();
-            } catch (error) {
-                cartManager.showToast(error.message, 'error');
-            }
-        });
+    if (page === 'my-account.html' || page === 'user-dashboard.html') {
+        // user-dashboard.html has its own self-contained script
     }
 
     if (page === 'order-history.html') {
@@ -566,7 +699,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="mt-3">
                             ${order.orderItems.map(item => `
                                 <div class="d-flex align-items-center mb-2">
-                                    <img src="${resolveImageUrl(item.productImage) || 'https://via.placeholder.com/50'}" width="50" height="50" style="object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/50'">
+                                    <img src="${resolveImageUrl(item.productImage)}" width="50" height="50" style="object-fit:cover;border-radius:8px" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
                                     <div class="ms-3">
                                         <strong>${item.productName}</strong>
                                         <div class="text-muted">Qty: ${item.quantity} x ₦${item.unitPrice.toFixed(2)}</div>
@@ -605,7 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById('checkoutItems').innerHTML = cart.map(item => `
                 <div class="d-flex align-items-center mb-3">
-                    <img src="${resolveImageUrl(item.image) || 'https://via.placeholder.com/60'}" width="60" height="60" style="object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/60'">
+                    <img src="${resolveImageUrl(item.image)}" width="60" height="60" style="object-fit:cover;border-radius:8px" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
                     <div class="ms-3 flex-grow-1">
                         <strong>${item.name}</strong>
                         <div class="text-muted">Qty: ${item.quantity}</div>
@@ -621,13 +754,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Newsletter form
+    document.getElementById('newsletterForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var email = document.getElementById('newsletterEmail').value;
+        if (email) {
+            cartManager.showToast('Thanks for subscribing!', 'success');
+            document.getElementById('newsletterEmail').value = '';
+        }
+    });
+
     // Login page
     if (page === 'login.html') {
         document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
+            if (!email) { triggerShake(document.getElementById('loginEmail')); return; }
+            if (!password) { triggerShake(document.getElementById('loginPassword')); return; }
+            const loginBtn = document.querySelector('#loginForm button[type="submit"]');
+            setButtonLoading(loginBtn, true);
             const result = await auth.login(email, password);
+            setButtonLoading(loginBtn, false);
             if (result.success) {
                 const params = new URLSearchParams(window.location.search);
                 var redirect = params.get('redirect');
@@ -635,9 +783,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (result.user.role === 'ADMIN') redirect = 'admin/dashboard.html';
                     else if (result.user.role === 'SECRETARY') redirect = 'secretary-dashboard.html';
                     else if (result.user.role === 'DELIVERY_MAN') redirect = 'delivery-dashboard.html';
+                    else if (result.user.role === 'WAREHOUSE') redirect = 'warehouse-dashboard.html';
                     else redirect = 'index.html';
                 }
-                window.location.href = redirect;
+                var firstName = getFirstName(result.user.fullName);
+                showWelcomeOverlay('Welcome back, ' + firstName + '!', 'fa-hand-wave', redirect);
             } else {
                 cartManager.showToast(result.error, 'error');
             }
@@ -649,13 +799,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
             const phone = document.getElementById('regPhone')?.value || '';
+            if (!name) { triggerShake(document.getElementById('regName')); return; }
+            if (!email) { triggerShake(document.getElementById('regEmail')); return; }
+            if (!password || password.length < 6) { triggerShake(document.getElementById('regPassword')); return; }
+            const regBtn = document.querySelector('#registerForm button[type="submit"]');
+            setButtonLoading(regBtn, true);
             const result = await auth.register(name, email, password, phone);
+            setButtonLoading(regBtn, false);
             if (result.success) {
-                window.location.href = 'index.html';
+                var firstName = getFirstName(result.user.fullName);
+                showWelcomeOverlay('Welcome, ' + firstName + '! Have a great time shopping with us.', 'fa-shopping-bag', 'index.html');
             } else {
                 cartManager.showToast(result.error, 'error');
             }
         });
+    }
+
+    // Update avatar initials
+    updateAvatar();
+    var avatarObserver = new MutationObserver(updateAvatar);
+    var userNameEl = document.getElementById('userName');
+    if (userNameEl) {
+        avatarObserver.observe(userNameEl, { childList: true, characterData: true, subtree: true });
     }
 
     // Update user menu links based on role
@@ -665,8 +830,26 @@ document.addEventListener('DOMContentLoaded', () => {
         var adminLink = document.getElementById('adminLink');
         var secLink = document.getElementById('secretaryLink');
         var delLink = document.getElementById('deliveryLink');
+        var whLink = document.getElementById('warehouseLink');
         if (role === 'ADMIN' && adminLink) adminLink.style.display = 'block';
         if (role === 'SECRETARY' && secLink) secLink.style.display = 'block';
         if (role === 'DELIVERY_MAN' && delLink) delLink.style.display = 'block';
+        if (role === 'WAREHOUSE' && whLink) whLink.style.display = 'block';
     }
+
+    // Init animations
+    initScrollReveal();
+    addRippleToButtons();
+
+    // Stagger product cards after load
+    var checkCards = setInterval(function() {
+        var cards = document.querySelectorAll('.product-card-3d');
+        if (cards.length > 0) {
+            cards.forEach(function(el, i) {
+                el.style.transitionDelay = (0.05 * i) + 's';
+                if (ANIM_OBSERVER) ANIM_OBSERVER.observe(el);
+            });
+            clearInterval(checkCards);
+        }
+    }, 500);
 });

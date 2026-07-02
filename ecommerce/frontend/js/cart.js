@@ -27,14 +27,42 @@ const cartManager = {
 
         cartManager.saveCart(cart);
         cartManager.showToast(`${product.name} added to cart!`, 'success');
+
+        // Brief button flash for triggered buttons
+        var activeBtn = document.activeElement;
+        if (activeBtn && activeBtn.classList.contains('add-to-cart-btn')) {
+            activeBtn.classList.add('btn-cart-added');
+            var origText = activeBtn.textContent;
+            activeBtn.innerHTML = '<i class="fas fa-check me-1"></i><span>Added!</span>';
+            setTimeout(function() {
+                activeBtn.classList.remove('btn-cart-added');
+                activeBtn.innerHTML = origText;
+            }, 1200);
+        }
     },
 
-    removeItem: (productId) => {
+    removeItem: (productId, animate = true) => {
         let cart = cartManager.getCart();
         const item = cart.find(i => i.productId === productId);
-        cart = cart.filter(item => item.productId !== productId);
-        cartManager.saveCart(cart);
-        if (item) cartManager.showToast(`${item.name} removed from cart`, 'error');
+        if (!item) return;
+        if (animate) {
+            var rows = document.querySelectorAll('.cart-item');
+            rows.forEach(function(row) {
+                var btn = row.querySelector('[onclick*="removeItem(' + productId + ')"]');
+                if (btn) {
+                    row.classList.add('cart-item-removing');
+                    setTimeout(function() {
+                        cart = cart.filter(function(i) { return i.productId !== productId; });
+                        cartManager.saveCart(cart);
+                    }, 350);
+                }
+            });
+            if (item) cartManager.showToast(`${item.name} removed from cart`, 'error');
+        } else {
+            cart = cart.filter(i => i.productId !== productId);
+            cartManager.saveCart(cart);
+            if (item) cartManager.showToast(`${item.name} removed from cart`, 'error');
+        }
     },
 
     updateQuantity: (productId, quantity) => {
@@ -66,7 +94,22 @@ const cartManager = {
     updateCartCount: () => {
         const count = cartManager.getCount();
         document.querySelectorAll('.cart-count').forEach(el => {
+            var oldCount = el.textContent;
             el.textContent = count;
+            if (oldCount !== count.toString()) {
+                el.classList.remove('pulse');
+                void el.offsetWidth;
+                el.classList.add('pulse');
+            }
+        });
+        document.querySelectorAll('.cart-badge').forEach(el => {
+            var oldCount = el.textContent;
+            el.textContent = count;
+            if (oldCount !== count.toString()) {
+                el.classList.remove('pulse');
+                void el.offsetWidth;
+                el.classList.add('pulse');
+            }
         });
     },
 
@@ -91,7 +134,7 @@ const cartManager = {
 
         container.innerHTML = cart.map(item => `
             <div class="cart-item d-flex align-items-center">
-                <img src="${resolveImageUrl(item.image) || 'https://via.placeholder.com/100'}" alt="${item.name}">
+                <img src="${resolveImageUrl(item.image)}" alt="${item.name}" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
                 <div class="ms-3 flex-grow-1">
                     <h6 class="fw-bold mb-1">${item.name}</h6>
                     <p class="text-muted mb-0">₦${(item.price || 0).toFixed(2)}</p>
@@ -140,18 +183,30 @@ const cartManager = {
 
         const toast = document.createElement('div');
         toast.className = `toast-custom ${type}`;
+        const iconMap = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-info-circle' };
         toast.innerHTML = `
             <div class="d-flex align-items-center">
-                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} me-2"></i>
+                <i class="fas ${iconMap[type] || 'fa-info-circle'} me-2"></i>
                 <span>${message}</span>
             </div>
         `;
         container.appendChild(toast);
 
+        // Stack offset
+        var offset = container.children.length * 8;
+        if (offset > 40) offset = 40;
+        toast.style.marginTop = offset + 'px';
+
         setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => toast.remove(), 300);
+            toast.classList.add('removing');
+            setTimeout(() => {
+                toast.remove();
+                // Reset remaining toasts
+                var remaining = container.querySelectorAll('.toast-custom');
+                remaining.forEach(function(t, i) {
+                    t.style.marginTop = (i * 8) + 'px';
+                });
+            }, 250);
         }, 3000);
     },
 };

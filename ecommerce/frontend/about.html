@@ -25,22 +25,31 @@
                 <li class="nav-item"><a class="nav-link active" href="about.html">About</a></li>
                 <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
             </ul>
-            <div class="nav-icons d-flex align-items-center gap-2">
-                <a href="login.html" class="btn" id="loginLink"><i class="far fa-user"></i></a>
-                <div class="dropdown" id="userMenu" style="display:none">
-                    <a class="btn dropdown-toggle" data-bs-toggle="dropdown"><i class="far fa-user"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="user-dashboard.html">Dashboard</a></li>
-                        <li><a class="dropdown-item" href="order-history.html">My Orders</a></li>
-                        <li><a class="dropdown-item" href="tracking.html">Track Order</a></li>
-                        <li id="adminLink" style="display:none"><a class="dropdown-item" href="admin/dashboard.html">Admin Panel</a></li>
-                        <li id="secretaryLink" style="display:none"><a class="dropdown-item" href="secretary-dashboard.html">Secretary Panel</a></li>
-                        <li id="deliveryLink" style="display:none"><a class="dropdown-item" href="delivery-dashboard.html">Delivery Panel</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" id="logoutBtn">Logout</a></li>
-                    </ul>
+            <div class="nav-icons d-flex align-items-center">
+                <div class="nav-icons-group d-flex align-items-center">
+                    <a href="login.html" class="nav-icon-btn rounded-pill" id="loginLink"><i class="far fa-user"></i></a>
+                    <div class="dropdown" id="userMenu" style="display:none">
+                        <a class="nav-icon-btn rounded-pill dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown">
+                            <div class="user-avatar" id="userAvatar">?</div>
+                            <i class="fas fa-chevron-down dropdown-arrow ms-1"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="user-dashboard.html">Dashboard</a></li>
+                            <li><a class="dropdown-item" href="order-history.html">My Orders</a></li>
+                            <li><a class="dropdown-item" href="tracking.html">Track Order</a></li>
+                            <li id="adminLink" style="display:none"><a class="dropdown-item" href="admin/dashboard.html">Admin Panel</a></li>
+                            <li id="secretaryLink" style="display:none"><a class="dropdown-item" href="secretary-dashboard.html">Secretary Panel</a></li>
+                            <li id="warehouseLink" style="display:none"><a class="dropdown-item" href="warehouse-dashboard.html">Warehouse Panel</a></li>
+                            <li id="deliveryLink" style="display:none"><a class="dropdown-item" href="delivery-dashboard.html">Delivery Panel</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutBtn">Logout</a></li>
+                        </ul>
+                    </div>
+                    <a href="cart.html" class="nav-icon-btn rounded-pill position-relative">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span class="cart-badge">0</span>
+                    </a>
                 </div>
-                <a href="cart.html" class="btn"><i class="fas fa-shopping-bag"></i><span class="cart-count">0</span></a>
             </div>
         </div>
     </div>
@@ -212,5 +221,6 @@
 <script src="js/auth.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/main.js"></script>
+<script src="js/page-transitions.js"></script>
 </body>
 </html>

@@ -13,7 +13,7 @@ def delivery_required(fn):
     @jwt_required()
     def wrapper(*args, **kwargs):
         user = User.query.get(int(get_jwt_identity()))
-        if not user or user.role not in ('DELIVERY_MAN', 'ADMIN'):
+        if not user or user.role != 'DELIVERY_MAN':
             return {'error': 'Delivery man access required'}, 403
         return fn(*args, **kwargs)
     return wrapper

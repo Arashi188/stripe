@@ -13,6 +13,7 @@ def get_categories():
         'name': c.name,
         'description': c.description,
         'imageUrl': c.image_url,
+        'backgroundImageUrl': c.background_image_url,
     } for c in categories]
 
 
@@ -26,6 +27,7 @@ def create_category():
         name=data['name'],
         description=data.get('description', ''),
         image_url=data.get('imageUrl', ''),
+        background_image_url=data.get('backgroundImageUrl', ''),
     )
     db.session.add(category)
     db.session.commit()
@@ -34,4 +36,5 @@ def create_category():
         'name': category.name,
         'description': category.description,
         'imageUrl': category.image_url,
+        'backgroundImageUrl': category.background_image_url,
     }, 201

@@ -28,6 +28,7 @@
         .summary-row { display: flex; justify-content: space-between; padding: .35rem 0; color: #6c757d; }
         .summary-total { font-size: 1.25rem; font-weight: 700; margin-top: .75rem; padding-top: .75rem; border-top: 2px solid #e9ecef; }
         .qty-badge { background: #e7f1ff; color: #0d6efd; font-size: .75rem; padding: .15rem .5rem; border-radius: 20px; }
+        @media (max-width: 767.98px) { .card.border-0.shadow-sm.p-4 { padding: 1rem !important; } .checkout-step { padding: 0.75rem; } .payment-option { padding: 0.75rem; } #checkoutBtn { font-size: 1rem; padding: 0.85rem; } }
     </style>
 </head>
 <body>
@@ -35,8 +36,13 @@
 <nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white" style="box-shadow:var(--shadow)">
     <div class="container">
         <a class="navbar-brand" href="index.html"><img src="images/logo.png" alt="GREAT WALL intl" height="36"></a>
-        <div class="nav-icons d-flex align-items-center gap-2">
-            <a href="cart.html" class="btn"><i class="fas fa-shopping-bag"></i><span class="cart-count">0</span></a>
+        <div class="nav-icons d-flex align-items-center">
+            <div class="nav-icons-group d-flex align-items-center">
+                <a href="cart.html" class="nav-icon-btn rounded-pill position-relative">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="cart-badge">0</span>
+                </a>
+            </div>
         </div>
     </div>
 </nav>
@@ -189,6 +195,7 @@
 <script src="js/auth.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/main.js"></script>
+<script src="js/page-transitions.js"></script>
 <script>
 var selectedMethod = 'cod';
 var bankAccounts = [];
@@ -305,9 +312,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     var total = subtotal + shipping + tax;
 
     document.getElementById('checkoutItems').innerHTML = cart.map(function(item) {
-        var imgSrc = (typeof resolveImageUrl === 'function' ? resolveImageUrl(item.image) : item.image) || 'https://via.placeholder.com/60';
+        var imgSrc = (typeof resolveImageUrl === 'function' ? resolveImageUrl(item.image) : item.image) || (typeof PLACEHOLDER_IMG !== 'undefined' ? PLACEHOLDER_IMG : '/images/no-image.svg');
         return '<div class="d-flex align-items-center mb-3 pb-3 border-bottom">' +
-            '<img src="' + imgSrc + '" width="64" height="64" style="object-fit:cover;border-radius:10px" alt="">' +
+            '<img src="' + imgSrc + '" width="64" height="64" style="object-fit:cover;border-radius:10px" alt="" onerror="this.onerror=null;this.src=\'' + (typeof PLACEHOLDER_IMG !== 'undefined' ? PLACEHOLDER_IMG : '/images/no-image.svg') + '\'">' +
             '<div class="ms-3 flex-grow-1">' +
             '<strong class="d-block">' + escapeHtml(item.name) + '</strong>' +
             '<span class="qty-badge">Qty: ' + item.quantity + '</span>' +

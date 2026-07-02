@@ -7,6 +7,31 @@ from app.models import User, Category, Product, BankAccount
 from werkzeug.security import generate_password_hash
 
 
+def create_admin_if_not_exists():
+    """Check if an admin user exists; if not, create one from env vars."""
+    if User.query.filter_by(role='ADMIN').first():
+        print('Admin already exists, skipping')
+        return
+
+    email = os.environ.get('ADMIN_EMAIL')
+    password = os.environ.get('ADMIN_PASSWORD')
+    name = os.environ.get('ADMIN_NAME')
+
+    if not all([email, password, name]):
+        print('ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME not all set. Skipping admin creation.')
+        return
+
+    admin = User(
+        email=email,
+        password=generate_password_hash(password),
+        full_name=name,
+        role='ADMIN',
+    )
+    db.session.add(admin)
+    db.session.commit()
+    print(f'Admin user created: {email}')
+
+
 def seed_data():
     app = create_app()
     with app.app_context():
@@ -15,15 +40,6 @@ def seed_data():
         if User.query.first():
             print('Database already seeded. Skipping.')
             return
-
-        # Admin user
-        admin = User(
-            email='admin@shoppremium.com',
-            password=generate_password_hash('admin123'),
-            full_name='Admin User',
-            role='ADMIN',
-        )
-        db.session.add(admin)
 
         # Regular user
         user = User(
@@ -54,6 +70,16 @@ def seed_data():
         )
         db.session.add(delivery_man)
 
+        # Warehouse worker
+        warehouse = User(
+            email='warehouse@shoppremium.com',
+            password=generate_password_hash('warehouse123'),
+            full_name='Walter Packer',
+            phone='+2348123456789',
+            role='WAREHOUSE',
+        )
+        db.session.add(warehouse)
+
         # Categories
         categories_data = [
             ('Fashion', 'Trendy clothing and accessories',
@@ -67,7 +93,7 @@ def seed_data():
         ]
         categories = []
         for name, desc, img in categories_data:
-            c = Category(name=name, description=desc, image_url=img)
+            c = Category(name=name, description=desc, image_url=img, background_image_url=img)
             db.session.add(c)
             categories.append(c)
         db.session.flush()
@@ -145,10 +171,10 @@ def seed_data():
 
         db.session.commit()
         print('Database seeded successfully!')
-        print('Admin:        admin@shoppremium.com / admin123')
         print('User:         user@example.com / user123')
         print('Secretary:    secretary@shoppremium.com / secretary123')
         print('Delivery Man: delivery@shoppremium.com / delivery123')
+        print('Warehouse:    warehouse@shoppremium.com / warehouse123')
 
 
 if __name__ == '__main__':

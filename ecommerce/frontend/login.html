@@ -44,7 +44,12 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Password</label>
-                        <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required>
+                        <div class="password-wrapper">
+                            <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('loginPassword', this)" tabindex="-1" aria-label="Toggle password visibility">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt me-2"></i>Sign In</button>
                 </form>
@@ -67,7 +72,12 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Password</label>
-                        <input type="password" class="form-control" id="regPassword" placeholder="Min 6 characters" minlength="6" required>
+                        <div class="password-wrapper">
+                            <input type="password" class="form-control" id="regPassword" placeholder="Min 6 characters" minlength="6" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('regPassword', this)" tabindex="-1" aria-label="Toggle password visibility">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus me-2"></i>Create Account</button>
                 </form>
@@ -81,5 +91,6 @@
 <script src="js/auth.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/main.js"></script>
+<script src="js/page-transitions.js"></script>
 </body>
 </html>

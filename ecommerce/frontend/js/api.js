@@ -1,6 +1,6 @@
 // === AFTER deploying backend to Render, replace the line below with your Render URL ===
 // Example: const RENDER_URL = 'https://my-shop-api.onrender.com';
-const RENDER_URL = 'https://YOUR_RENDER_APP_NAME.onrender.com';
+const RENDER_URL = 'https://stripe-584v.onrender.com';
 
 const USE_LOCAL = !window.location.hostname
     || window.location.hostname === 'localhost'
@@ -9,9 +9,10 @@ const USE_LOCAL = !window.location.hostname
 const API_BASE = USE_LOCAL ? 'http://127.0.0.1:5000/api' : RENDER_URL + '/api';
 const UPLOAD_BASE = USE_LOCAL ? 'http://127.0.0.1:5000' : RENDER_URL;
 const FRONTEND_BASE = window.location.origin;
+const PLACEHOLDER_IMG = '/images/no-image.svg';
 
 function resolveImageUrl(url) {
-    if (!url) return url;
+    if (!url) return PLACEHOLDER_IMG;
     if (url.startsWith('/uploads/')) {
         return UPLOAD_BASE + url;
     }
@@ -148,52 +149,6 @@ const api = {
         body: JSON.stringify({ productId, rating, comment }),
     }),
 
-    // Admin
-    admin: {
-        getDashboard: () => api.request('/admin/dashboard'),
-
-        createProduct: (data) => api.request('/admin/products', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        }),
-
-        updateProduct: (id, data) => api.request(`/admin/products/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-        }),
-
-        deleteProduct: (id) => api.request(`/admin/products/${id}`, {
-            method: 'DELETE',
-        }),
-
-        getAdminCategories: () => api.request('/admin/categories'),
-
-        createCategory: (data) => api.request('/admin/categories', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        }),
-
-        updateCategory: (id, data) => api.request(`/admin/categories/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-        }),
-
-        deleteCategory: (id) => api.request(`/admin/categories/${id}`, {
-            method: 'DELETE',
-        }),
-
-        getOrders: () => api.request('/admin/orders'),
-
-        getOrderDetail: (id) => api.request(`/admin/orders/${id}`),
-
-        updateOrderStatus: (orderId, status) => api.request(`/admin/orders/${orderId}/status`, {
-            method: 'PATCH',
-            body: JSON.stringify({ status }),
-        }),
-
-        getUsers: () => api.request('/admin/users'),
-    },
-
     // Secretary
     secretary: {
         getDashboard: () => api.request('/secretary/dashboard'),
@@ -205,9 +160,9 @@ const api = {
         }),
         getDeliveryMen: () => api.request('/secretary/delivery-men'),
         getBankAccounts: () => api.request('/secretary/bank-accounts'),
-        getNotifications: () => api.request('/admin/notifications'),
-        markNotificationRead: (id) => api.request(`/admin/notifications/${id}/read`, { method: 'POST' }),
-        markAllRead: () => api.request('/admin/notifications/read-all', { method: 'POST' }),
+        getNotifications: () => api.request('/secretary/notifications'),
+        markNotificationRead: (id) => api.request(`/secretary/notifications/${id}/read`, { method: 'POST' }),
+        markAllRead: () => api.request('/secretary/notifications/read-all', { method: 'POST' }),
     },
 
     // Delivery Man
@@ -247,12 +202,89 @@ const api = {
     getScanResults: (orderId) => api.request(`/orders/${orderId}/scan-results`),
 };
 
-// Admin extensions
-api.admin.createStaff = (data) => api.request('/admin/staff', { method: 'POST', body: JSON.stringify(data) });
-api.admin.deleteStaff = (userId) => api.request(`/admin/staff/${userId}`, { method: 'DELETE' });
-api.admin.getStaff = () => api.request('/admin/staff');
-api.admin.changeRole = (userId, role) => api.request(`/admin/users/${userId}/role`, { method: 'PATCH', body: JSON.stringify({ role }) });
-api.admin.getBankAccounts = () => api.request('/admin/bank-accounts');
-api.admin.createBankAccount = (data) => api.request('/admin/bank-accounts', { method: 'POST', body: JSON.stringify(data) });
-api.admin.updateBankAccount = (id, data) => api.request(`/admin/bank-accounts/${id}`, { method: 'PUT', body: JSON.stringify(data) });
-api.admin.deleteBankAccount = (id) => api.request(`/admin/bank-accounts/${id}`, { method: 'DELETE' });
+// Admin
+api.admin = {
+    getDashboard: () => api.request('/admin/dashboard'),
+
+    getProducts: (params = {}) => {
+        const query = new URLSearchParams();
+        if (params.page) query.append('page', params.page);
+        if (params.search) query.append('search', params.search);
+        if (params.category_id) query.append('category_id', params.category_id);
+        if (params.limit) query.append('limit', params.limit);
+        const qs = query.toString();
+        return api.request(`/admin/products${qs ? '?' + qs : ''}`);
+    },
+    createProduct: (formData) => api.request('/admin/products', { method: 'POST', body: formData }),
+    updateProduct: (id, formData) => api.request(`/admin/products/${id}`, { method: 'PUT', body: formData }),
+    deleteProduct: (id) => api.request(`/admin/products/${id}`, { method: 'DELETE' }),
+
+    getCategories: () => api.request('/admin/categories'),
+    createCategory: (formData) => api.request('/admin/categories', { method: 'POST', body: formData }),
+    updateCategory: (id, formData) => api.request(`/admin/categories/${id}`, { method: 'PUT', body: formData }),
+    deleteCategory: (id) => api.request(`/admin/categories/${id}`, { method: 'DELETE' }),
+
+    getStaff: () => api.request('/admin/staff'),
+    createStaff: (data) => api.request('/admin/staff', { method: 'POST', body: JSON.stringify(data) }),
+    updateStaff: (id, data) => api.request(`/admin/staff/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteStaff: (id) => api.request(`/admin/staff/${id}`, { method: 'DELETE' }),
+
+    getCustomers: (params = {}) => {
+        const query = new URLSearchParams();
+        if (params.page) query.append('page', params.page);
+        if (params.search) query.append('search', params.search);
+        const qs = query.toString();
+        return api.request(`/admin/customers${qs ? '?' + qs : ''}`);
+    },
+
+    getOrders: (params = {}) => {
+        const query = new URLSearchParams();
+        if (params.page) query.append('page', params.page);
+        if (params.status) query.append('status', params.status);
+        if (params.payment_method) query.append('payment_method', params.payment_method);
+        if (params.date_from) query.append('date_from', params.date_from);
+        if (params.date_to) query.append('date_to', params.date_to);
+        const qs = query.toString();
+        return api.request(`/admin/orders${qs ? '?' + qs : ''}`);
+    },
+    getOrderDetail: (id) => api.request(`/admin/orders/${id}`),
+
+    getBankAccounts: () => api.request('/admin/bank-accounts'),
+    createBankAccount: (data) => api.request('/admin/bank-accounts', { method: 'POST', body: JSON.stringify(data) }),
+    updateBankAccount: (id, data) => api.request(`/admin/bank-accounts/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteBankAccount: (id) => api.request(`/admin/bank-accounts/${id}`, { method: 'DELETE' }),
+
+    getSalesReport: (params = {}) => {
+        const query = new URLSearchParams();
+        if (params.start_date) query.append('start_date', params.start_date);
+        if (params.end_date) query.append('end_date', params.end_date);
+        const qs = query.toString();
+        return api.request(`/admin/reports/sales${qs ? '?' + qs : ''}`);
+    },
+    getProductsReport: () => api.request('/admin/reports/products'),
+};
+
+// Warehouse
+api.warehouse = {
+    getTasks: (status) => api.request(`/warehouse/tasks${status ? '?status=' + status : ''}`),
+    markPacked: (taskId) => api.request(`/warehouse/tasks/${taskId}/pack`, { method: 'POST' }),
+    undoPack: (taskId) => api.request(`/warehouse/tasks/${taskId}/unpack`, { method: 'POST' }),
+    getOrderDetail: (orderId) => api.request(`/warehouse/order-detail/${orderId}`),
+};
+
+// Secretary — send to warehouse
+api.secretary.sendToWarehouse = (orderId, notes) => api.request('/secretary/send-to-warehouse', {
+    method: 'POST',
+    body: JSON.stringify({ orderId, notes }),
+});
+
+// Chat
+api.chat = {
+    getConversations: () => api.request('/chat/conversations'),
+    getMessages: (convId) => api.request(`/chat/conversations/${convId}/messages`),
+    sendMessage: (convId, messageText) => api.request(`/chat/conversations/${convId}/messages`, {
+        method: 'POST',
+        body: JSON.stringify({ message_text: messageText }),
+    }),
+    getUnreadCount: () => api.request('/chat/unread-count'),
+};

@@ -8,3 +8,8 @@ stripe>=7.8.0
 gunicorn==21.2.0
 requests>=2.31.0
 psycopg2-binary>=2.9.9
+pytesseract>=0.3.13
+pillow>=10.0.0
+pdfplumber>=0.11.0
+flask-socketio>=5.3.6
+cloudinary>=1.40.0

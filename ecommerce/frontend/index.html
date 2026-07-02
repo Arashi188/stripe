@@ -26,28 +26,33 @@
                 <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
                 <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
             </ul>
-            <div class="nav-icons d-flex align-items-center gap-2">
-                <a href="shop.html" class="btn"><i class="fas fa-search"></i></a>
-                <a href="login.html" class="btn" id="loginLink"><i class="far fa-user"></i></a>
-                <div class="dropdown" id="userMenu" style="display:none">
-                    <a class="btn dropdown-toggle" data-bs-toggle="dropdown">
-                        <i class="far fa-user"></i> <span id="userName"></span>
+            <div class="nav-icons d-flex align-items-center">
+                <div class="nav-icons-group d-flex align-items-center">
+                    <a href="shop.html" class="nav-icon-btn rounded-pill"><i class="fas fa-search"></i></a>
+                    <a href="login.html" class="nav-icon-btn rounded-pill" id="loginLink"><i class="far fa-user"></i></a>
+                    <div class="dropdown" id="userMenu" style="display:none">
+                        <a class="nav-icon-btn rounded-pill dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown">
+                            <div class="user-avatar" id="userAvatar">?</div>
+                            <span class="user-name-text" id="userName"></span>
+                            <i class="fas fa-chevron-down dropdown-arrow ms-1"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="user-dashboard.html">Dashboard</a></li>
+                            <li><a class="dropdown-item" href="order-history.html">My Orders</a></li>
+                            <li><a class="dropdown-item" href="tracking.html">Track Order</a></li>
+                            <li id="adminLink" style="display:none"><a class="dropdown-item" href="admin/dashboard.html">Admin Panel</a></li>
+                            <li id="secretaryLink" style="display:none"><a class="dropdown-item" href="secretary-dashboard.html">Secretary Panel</a></li>
+                            <li id="warehouseLink" style="display:none"><a class="dropdown-item" href="warehouse-dashboard.html">Warehouse Panel</a></li>
+                            <li id="deliveryLink" style="display:none"><a class="dropdown-item" href="delivery-dashboard.html">Delivery Panel</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutBtn">Logout</a></li>
+                        </ul>
+                    </div>
+                    <a href="cart.html" class="nav-icon-btn rounded-pill position-relative">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span class="cart-badge">0</span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="user-dashboard.html">Dashboard</a></li>
-                        <li><a class="dropdown-item" href="order-history.html">My Orders</a></li>
-                        <li><a class="dropdown-item" href="tracking.html">Track Order</a></li>
-                        <li id="adminLink" style="display:none"><a class="dropdown-item" href="admin/dashboard.html">Admin Panel</a></li>
-                        <li id="secretaryLink" style="display:none"><a class="dropdown-item" href="secretary-dashboard.html">Secretary Panel</a></li>
-                        <li id="deliveryLink" style="display:none"><a class="dropdown-item" href="delivery-dashboard.html">Delivery Panel</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" id="logoutBtn">Logout</a></li>
-                    </ul>
                 </div>
-                <a href="cart.html" class="btn">
-                    <i class="fas fa-shopping-bag"></i>
-                    <span class="cart-count">0</span>
-                </a>
             </div>
         </div>
     </div>
@@ -171,7 +176,7 @@
                 <a href="shop.html" class="btn btn-primary rounded-pill px-4 py-2"><i class="fas fa-bolt me-2"></i>Shop Now</a>
             </div>
             <div class="image">
-                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80" alt="Premium Headphones">
+                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80" alt="Premium Headphones" loading="lazy">
             </div>
         </div>
     </div>
@@ -184,9 +189,9 @@
             <div class="col-lg-6">
                 <h2 class="fade-in">Stay in the Loop</h2>
                 <p class="mb-4 fade-in">Subscribe to get special offers, free giveaways, and exclusive deals.</p>
-                <form class="input-group mx-auto" id="newsletterForm">
-                    <input type="email" class="form-control" placeholder="Enter your email address" required>
-                    <button type="submit"><i class="fas fa-paper-plane me-2"></i>Subscribe</button>
+                <form class="input-group mx-auto" id="newsletterForm" onsubmit="return false">
+                    <input type="email" class="form-control" id="newsletterEmail" placeholder="Enter your email address" required>
+                    <button type="submit" id="newsletterBtn"><i class="fas fa-paper-plane me-2"></i>Subscribe</button>
                 </form>
             </div>
         </div>
@@ -249,5 +254,6 @@
 <script src="js/auth.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/main.js"></script>
+<script src="js/page-transitions.js"></script>
 </body>
 </html>
