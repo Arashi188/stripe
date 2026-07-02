@@ -2499,7 +2499,8 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
 .welcome-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(2, 6, 23, 0.82);
+    backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2513,27 +2514,97 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
     pointer-events: auto;
 }
 .welcome-card {
-    background: var(--white);
-    border-radius: 16px;
-    padding: 2.5rem 3rem;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid rgba(255,255,255,.75);
+    border-radius: 28px;
+    padding: 2.75rem 3rem 2.25rem;
     text-align: center;
     max-width: 420px;
     width: 90%;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    transform: scale(0.85) translateY(20px);
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 30px 90px rgba(2,6,23,.45), inset 0 1px 0 rgba(255,255,255,.9);
+    transform: scale(0.9) translateY(24px);
+    transition: transform 0.45s cubic-bezier(.2,.8,.2,1);
 }
 .welcome-overlay.show .welcome-card {
     transform: scale(1) translateY(0);
 }
 .welcome-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    color: var(--success);
+    position: relative;
+    z-index: 1;
+    width: 78px;
+    height: 78px;
+    margin: 0 auto 1.25rem;
+    border-radius: 24px;
+    display: grid;
+    place-items: center;
+    font-size: 2rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    box-shadow: 0 14px 30px rgba(37,99,235,.3);
+    animation: welcomeIconFloat 1.8s ease-in-out infinite alternate;
+}
+.welcome-kicker {
+    position: relative;
+    z-index: 1;
+    margin-bottom: .4rem;
+    color: var(--primary);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+    text-transform: uppercase;
 }
 .welcome-text {
-    font-size: 1.2rem;
-    font-weight: 600;
+    position: relative;
+    z-index: 1;
+    font-size: clamp(1.35rem, 4vw, 1.75rem);
+    font-weight: 800;
     color: var(--secondary);
-    line-height: 1.6;
+    line-height: 1.25;
+}
+.welcome-subtext {
+    position: relative;
+    z-index: 1;
+    max-width: 310px;
+    margin: .75rem auto 1.5rem;
+    color: var(--gray-500);
+    font-size: .92rem;
+}
+.welcome-progress {
+    position: relative;
+    z-index: 1;
+    height: 4px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--gray-200);
+}
+.welcome-progress span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--primary), #7c3aed);
+    transform-origin: left;
+    animation: welcomeProgress 1.8s linear forwards;
+}
+.welcome-orb {
+    position: absolute;
+    z-index: -1;
+    border-radius: 50%;
+    filter: blur(2px);
+    opacity: .14;
+}
+.welcome-orb-one { width: 180px; height: 180px; top: -95px; right: -65px; background: var(--primary); }
+.welcome-orb-two { width: 140px; height: 140px; bottom: -80px; left: -55px; background: #7c3aed; }
+@keyframes welcomeIconFloat {
+    to { transform: translateY(-5px) rotate(2deg); }
+}
+@keyframes welcomeProgress {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+@media (max-width: 480px) {
+    .welcome-card { padding: 2.25rem 1.4rem 1.75rem; border-radius: 22px; }
 }

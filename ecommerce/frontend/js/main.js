@@ -163,11 +163,19 @@ function showWelcomeOverlay(message, iconClass, redirectUrl, delay) {
     var overlay = document.createElement('div');
     overlay.id = 'welcomeOverlay';
     overlay.className = 'welcome-overlay';
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
     overlay.innerHTML =
         '<div class="welcome-card">' +
+            '<span class="welcome-orb welcome-orb-one"></span>' +
+            '<span class="welcome-orb welcome-orb-two"></span>' +
             '<div class="welcome-icon"><i class="fas ' + iconClass + '"></i></div>' +
-            '<div class="welcome-text">' + message + '</div>' +
+            '<div class="welcome-kicker">Signed in successfully</div>' +
+            '<div class="welcome-text"></div>' +
+            '<p class="welcome-subtext">Your account is ready. Taking you to your shopping experience.</p>' +
+            '<div class="welcome-progress" aria-hidden="true"><span></span></div>' +
         '</div>';
+    overlay.querySelector('.welcome-text').textContent = message;
     document.body.appendChild(overlay);
 
     requestAnimationFrame(function() {
