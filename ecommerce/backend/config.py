@@ -18,7 +18,8 @@ class Config:
     SQLALCHEMY_DATABASE_URI = _database_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://stripe-two-dun.vercel.app')
+    # Set this to the current production frontend URL on Render/Vercel.
+    FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5500').rstrip('/')
 
     CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
     CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')

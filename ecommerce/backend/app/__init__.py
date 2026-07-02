@@ -1,4 +1,5 @@
 import os
+import re
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -23,7 +24,8 @@ def create_app(config_name='development'):
     CORS(app, resources={
         r"/api/*": {
             "origins": [
-                "https://stripe-two-dun.vercel.app",
+                app.config['FRONTEND_URL'],
+                re.compile(r"https://[a-zA-Z0-9-]+\.vercel\.app"),
                 "http://127.0.0.1:5500",
                 "http://localhost:5500",
                 "http://127.0.0.1:5501",
