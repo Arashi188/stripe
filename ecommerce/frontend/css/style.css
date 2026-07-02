@@ -1648,6 +1648,18 @@ section:not(.hero-section) { padding-left: max(12px, 1.5vw); padding-right: max(
 /* ── Auth card responsive ── */
 .auth-card { padding: clamp(1.5rem, 3vw, 2.5rem); }
 
+/* Authentication tabs need their own contrast rules, separate from navbar links. */
+#authTabs .nav-link {
+    color: var(--secondary) !important;
+    text-shadow: none;
+}
+
+#authTabs .nav-link.active,
+#authTabs .nav-link.active:hover,
+#authTabs .nav-link.active:focus {
+    color: #fff !important;
+}
+
 /* ── Dashboard header responsive ── */
 .dashboard-header { padding: clamp(5rem, 8vw, 8rem) 0 clamp(1.5rem, 3vw, 3rem); }
 
