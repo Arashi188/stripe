@@ -44,7 +44,16 @@ const auth = {
     logout: () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = 'login.html';
+        // FIX: Use a relative path that works from any subdirectory depth
+        const depth = window.location.pathname.split('/').filter(Boolean).length;
+        const prefix = depth > 1 ? '../'.repeat(depth - 1) : './';
+        // Detect if we're in /admin/ subfolder and go up accordingly
+        const path = window.location.pathname;
+        if (path.includes('/admin/')) {
+            window.location.href = '../login.html';
+        } else {
+            window.location.href = 'login.html';
+        }
     },
 
     getRole: () => {
@@ -64,7 +73,10 @@ const auth = {
 
     redirectToLogin: () => {
         const returnTo = window.location.pathname + window.location.search;
-        window.location.href = 'login.html?redirect=' + encodeURIComponent(returnTo);
+        // FIX: Determine correct login.html path based on current location
+        const path = window.location.pathname;
+        const loginPath = path.includes('/admin/') ? '../login.html' : 'login.html';
+        window.location.href = loginPath + '?redirect=' + encodeURIComponent(returnTo);
     },
 
     redirectIfNotLoggedIn: () => {
@@ -74,9 +86,14 @@ const auth = {
     },
 
     redirectIfNotAdmin: () => {
-        auth.redirectIfNotLoggedIn();
+        if (!auth.isLoggedIn()) {
+            auth.redirectToLogin();
+            return;
+        }
         if (!auth.isAdmin()) {
-            window.location.href = 'index.html';
+            // FIX: Go to correct index.html from /admin/ subfolder
+            const path = window.location.pathname;
+            window.location.href = path.includes('/admin/') ? '../index.html' : 'index.html';
         }
     },
 
@@ -93,8 +110,22 @@ const auth = {
 
         if (loginLink) loginLink.style.display = isLoggedIn ? 'none' : 'block';
         if (userMenu) userMenu.style.display = isLoggedIn ? 'block' : 'none';
-        if (userName) userName.textContent = user ? user.fullName : '';
-        if (adminLink) adminLink.style.display = isLoggedIn && user && user.role === 'ADMIN' ? 'block' : 'none';
+
+        // FIX: Truncate long names so they don't overflow the navbar
+        if (userName && user) {
+            const name = user.fullName || '';
+            // Show first name only if full name is long, with tooltip for full name
+            const firstName = name.split(' ')[0];
+            const displayName = name.length > 15 ? firstName : name;
+            userName.textContent = displayName;
+            userName.title = name; // Show full name on hover
+        } else if (userName) {
+            userName.textContent = '';
+        }
+
+        if (adminLink) {
+            adminLink.style.display = isLoggedIn && user && user.role === 'ADMIN' ? 'block' : 'none';
+        }
 
         const secLink = document.getElementById('secretaryLink');
         const delLink = document.getElementById('deliveryLink');
@@ -102,7 +133,10 @@ const auth = {
         if (delLink) delLink.style.display = isLoggedIn && user && user.role === 'DELIVERY_MAN' ? 'block' : 'none';
 
         if (logoutBtn) {
-            logoutBtn.addEventListener('click', (e) => {
+            // FIX: Remove old listeners before adding new one to avoid duplicates
+            const newLogoutBtn = logoutBtn.cloneNode(true);
+            logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+            newLogoutBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 auth.logout();
             });
@@ -110,7 +144,9 @@ const auth = {
 
         const sidebarLogout = document.getElementById('logoutBtnSidebar');
         if (sidebarLogout) {
-            sidebarLogout.addEventListener('click', (e) => {
+            const newSidebarLogout = sidebarLogout.cloneNode(true);
+            sidebarLogout.parentNode.replaceChild(newSidebarLogout, sidebarLogout);
+            newSidebarLogout.addEventListener('click', (e) => {
                 e.preventDefault();
                 auth.logout();
             });

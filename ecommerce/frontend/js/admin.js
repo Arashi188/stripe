@@ -2,24 +2,25 @@
 let allProducts = [];
 let deleteCallback = null;
 
+// FIX: Define loadSection on window IMMEDIATELY (outside DOMContentLoaded)
+// so that onclick="loadSection('addProduct')" in HTML works before DOMContentLoaded fires
+window.loadSection = function(section) {
+    document.querySelectorAll('.admin-content > div[id$="Section"]').forEach(el => el.style.display = 'none');
+    const target = document.getElementById(section + 'Section');
+    if (target) target.style.display = 'block';
+    document.querySelectorAll('.admin-sidebar .nav-link').forEach(link => link.classList.remove('active'));
+    const activeLink = document.querySelector(`.admin-sidebar .nav-link[data-section="${section}"]`);
+    if (activeLink) activeLink.classList.add('active');
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     auth.redirectIfNotAdmin();
-
-    const loadSection = (section) => {
-        document.querySelectorAll('.admin-content > div[id$="Section"]').forEach(el => el.style.display = 'none');
-        const target = document.getElementById(section + 'Section');
-        if (target) target.style.display = 'block';
-        document.querySelectorAll('.admin-sidebar .nav-link').forEach(link => link.classList.remove('active'));
-        const activeLink = document.querySelector(`.admin-sidebar .nav-link[data-section="${section}"]`);
-        if (activeLink) activeLink.classList.add('active');
-    };
-
-    window.loadSection = loadSection;
 
     document.querySelectorAll('.admin-sidebar .nav-link').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            loadSection(link.dataset.section);
+            const section = link.dataset.section;
+            if (section) loadSection(section);
         });
     });
 
@@ -44,6 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('categoryModal').addEventListener('hidden.bs.modal', () => {
         document.getElementById('categoryForm').reset();
         document.getElementById('categoryId').value = '';
+        document.getElementById('categoryModalTitle').innerHTML = '<i class="fas fa-tag me-2 text-primary"></i>Add Category';
     });
 
     // ════════════════════════════════════════
@@ -52,29 +54,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loadDashboard = async () => {
         try {
             const data = await api.admin.getDashboard();
-            document.getElementById('totalOrders').textContent = data.totalOrders;
-            document.getElementById('totalUsers').textContent = data.totalUsers;
-            document.getElementById('totalProducts').textContent = data.totalProducts;
-            document.getElementById('revenue').textContent = '₦' + data.revenue.toFixed(2);
+            document.getElementById('totalOrders').textContent = data.totalOrders ?? 0;
+            document.getElementById('totalUsers').textContent = data.totalUsers ?? 0;
+            document.getElementById('totalProducts').textContent = data.totalProducts ?? 0;
+            document.getElementById('revenue').textContent = '₦' + (data.revenue ?? 0).toFixed(2);
 
             const tbody = document.getElementById('dashboardOrdersTable');
-            if (tbody && data.recentOrders.length) {
+            if (!tbody) return;
+            if (data.recentOrders && data.recentOrders.length) {
                 tbody.innerHTML = data.recentOrders.map(o => `
                     <tr>
                         <td><strong>#${o.orderNumber}</strong></td>
-                        <td>${o.user ? o.user.fullName : 'N/A'}</td>
-                        <td>₦${o.totalAmount.toFixed(2)}</td>
+                        <td>${o.user ? escapeHtml(o.user.fullName) : 'N/A'}</td>
+                        <td>₦${Number(o.totalAmount).toFixed(2)}</td>
                         <td><span class="status-badge status-${o.status.toLowerCase()}">${o.status}</span></td>
                         <td><span class="${o.paymentStatus === 'PAID' ? 'text-success' : 'text-warning'} fw-semibold">${o.paymentStatus}</span></td>
                         <td>${o.receiptUrl ? '<span class="badge bg-success">Uploaded</span>' : '<span class="badge bg-secondary">N/A</span>'}</td>
-                        <td>${o.deliveryMan ? o.deliveryMan.fullName : '<span class="text-muted">-</span>'}</td>
+                        <td>${o.deliveryMan ? escapeHtml(o.deliveryMan.fullName) : '<span class="text-muted">-</span>'}</td>
                         <td><small class="text-muted">${new Date(o.createdAt).toLocaleString()}</small></td>
+                        <td>-</td>
                     </tr>
                 `).join('');
-            } else if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">No orders yet</td></tr>';
+            } else {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">No orders yet</td></tr>';
             }
-        } catch (e) { console.error('Dashboard error:', e); }
+        } catch (e) {
+            console.error('Dashboard error:', e);
+        }
     };
 
     // ════════════════════════════════════════
@@ -83,12 +89,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loadAdminProducts = async () => {
         const tbody = document.getElementById('productsTableBody');
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner"></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner-border spinner-border-sm"></div></td></tr>';
         try {
             allProducts = await api.getProducts();
             renderProducts();
         } catch (e) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">${e.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">${escapeHtml(e.message)}</td></tr>`;
         }
     };
 
@@ -101,18 +107,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             return matchSearch && matchCat;
         });
         const tbody = document.getElementById('productsTableBody');
+        if (!tbody) return;
         if (filtered.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No products found</td></tr>';
             return;
         }
         tbody.innerHTML = filtered.map(p => `
             <tr>
-                <td><img src="${resolveImageUrl(p.imageUrl) || 'https://via.placeholder.com/40'}" width="40" height="40" style="object-fit:cover;border-radius:4px"></td>
-                <td><strong>${p.name}</strong>${p.sku ? `<br><small class="text-muted">SKU: ${p.sku}</small>` : ''}</td>
-                <td>₦${p.price.toFixed(2)}</td>
-                <td>${p.category ? p.category.name : '-'}</td>
+                <td><img src="${escapeHtml(resolveImageUrl(p.imageUrl) || 'https://via.placeholder.com/40')}" 
+                    width="40" height="40" style="object-fit:cover;border-radius:4px" 
+                    onerror="this.src='https://via.placeholder.com/40'"></td>
+                <td><strong>${escapeHtml(p.name)}</strong>${p.sku ? `<br><small class="text-muted">SKU: ${escapeHtml(p.sku)}</small>` : ''}</td>
+                <td>₦${Number(p.price).toFixed(2)}</td>
+                <td>${p.category ? escapeHtml(p.category.name) : '-'}</td>
                 <td><span class="${p.stockQuantity > 0 ? 'text-success' : 'text-danger'} fw-semibold">${p.stockQuantity}</span></td>
-                <td>${p.rating || '-'}</td>
+                <td>${p.rating != null ? p.rating : '-'}</td>
                 <td>
                     <button class="btn btn-sm btn-outline-primary me-1" onclick="editProduct(${p.id})" title="Edit"><i class="fas fa-edit"></i></button>
                     <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id})" title="Delete"><i class="fas fa-trash"></i></button>
@@ -123,23 +132,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.filterProducts = () => renderProducts();
 
-    // Load category filter dropdown
     const loadCategoryFilter = async () => {
         const select = document.getElementById('categoryFilter');
         if (!select) return;
         try {
             const cats = await api.getCategories();
             select.innerHTML = '<option value="">All Categories</option>' +
-                cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-        } catch (e) { console.error(e); }
+                cats.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+        } catch (e) { console.error('Category filter error:', e); }
     };
 
     // ── Product Form ──
+    let pendingFile = null;
+
     const productForm = document.getElementById('productForm');
     if (productForm) {
         productForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
+            const btn = productForm.querySelector('button[type="submit"]');
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
 
@@ -148,8 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (pendingFile) {
                     const formData = new FormData();
                     formData.append('file', pendingFile);
-                    const baseUrl = typeof API_BASE !== 'undefined' ? API_BASE : 'http://localhost:5001/api';
-                    const res = await fetch(`${baseUrl}/upload`, {
+                    const res = await fetch(`${API_BASE}/upload`, {
                         method: 'POST',
                         headers: { Authorization: `Bearer ${api.getToken()}` },
                         body: formData,
@@ -159,14 +168,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 const productData = {
-                    name: document.getElementById('productName').value,
-                    description: document.getElementById('productDescription').value,
+                    name: document.getElementById('productName').value.trim(),
+                    description: document.getElementById('productDescription').value.trim(),
                     price: parseFloat(document.getElementById('productPrice').value),
                     compareAtPrice: parseFloat(document.getElementById('productComparePrice').value) || null,
-                    imageUrl: imageUrl,
+                    imageUrl: imageUrl || null,
                     stockQuantity: parseInt(document.getElementById('productStock').value),
-                    sku: document.getElementById('productSku').value,
-                    brand: document.getElementById('productBrand').value,
+                    sku: document.getElementById('productSku').value.trim() || null,
+                    brand: document.getElementById('productBrand').value.trim() || null,
                     categoryId: parseInt(document.getElementById('productCategory').value) || null,
                     featured: document.getElementById('productFeatured').checked,
                 };
@@ -179,34 +188,42 @@ document.addEventListener('DOMContentLoaded', async () => {
                     await api.admin.createProduct(productData);
                     cartManager.showToast('Product created!', 'success');
                 }
+
                 pendingFile = null;
                 productForm.reset();
                 document.getElementById('productId').value = '';
                 document.getElementById('productImage').value = '';
                 document.getElementById('imagePreview').style.display = 'none';
-                loadAdminProducts();
+                document.getElementById('productFormTitle').textContent = 'Add New Product';
+                await loadAdminProducts();
                 loadSection('products');
             } catch (error) {
                 cartManager.showToast(error.message, 'error');
             }
+
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-save me-2"></i>Save Product';
         });
     }
 
-    let pendingFile = null;
-
     window.uploadProductImage = (input) => {
-        try {
-            const file = input.files[0];
-            if (!file) return;
-            pendingFile = file;
-            const preview = document.getElementById('imagePreview');
-            const img = preview.querySelector('img');
-            const reader = new FileReader();
-            reader.onload = (e) => { img.src = e.target.result; preview.style.display = 'block'; };
-            reader.readAsDataURL(file);
-        } catch (err) { console.error('uploadProductImage error:', err); }
+        const file = input.files[0];
+        if (!file) return;
+        // Validate file size (16MB max)
+        if (file.size > 16 * 1024 * 1024) {
+            cartManager.showToast('Image too large. Max size is 16MB.', 'error');
+            input.value = '';
+            return;
+        }
+        pendingFile = file;
+        const preview = document.getElementById('imagePreview');
+        const img = preview.querySelector('img');
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            img.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
     };
 
     document.getElementById('productImageInput')?.addEventListener('change', function () {
@@ -224,6 +241,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadSection('addProduct');
         document.getElementById('productFormTitle').textContent = 'Edit Product';
         try {
+            // FIX: Load category select before setting value
+            await loadProductCategorySelect();
             const product = await api.getProduct(id);
             document.getElementById('productId').value = product.id;
             document.getElementById('productName').value = product.name;
@@ -238,10 +257,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('productFeatured').checked = product.featured;
             if (product.imageUrl) {
                 const preview = document.getElementById('imagePreview');
-                preview.querySelector('img').src = resolveImageUrl(product.imageUrl);
+                const resolvedUrl = resolveImageUrl(product.imageUrl);
+                preview.querySelector('img').src = resolvedUrl;
                 preview.style.display = 'block';
+            } else {
+                document.getElementById('imagePreview').style.display = 'none';
             }
-        } catch (e) { cartManager.showToast(e.message, 'error'); }
+        } catch (e) {
+            cartManager.showToast(e.message, 'error');
+        }
     };
 
     window.deleteProduct = (id) => {
@@ -264,15 +288,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loadAdminCategories = async () => {
         const tbody = document.getElementById('categoriesTableBody');
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner"></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm"></div></td></tr>';
         try {
             const cats = await api.admin.getAdminCategories();
+            if (!cats.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No categories yet</td></tr>';
+                return;
+            }
             tbody.innerHTML = cats.map(c => `
                 <tr>
                     <td>${c.id}</td>
-                    <td><strong>${c.name}</strong></td>
-                    <td>${c.description || '-'}</td>
-                    <td><span class="badge bg-info bg-opacity-10 text-info">${c.productCount}</span></td>
+                    <td><strong>${escapeHtml(c.name)}</strong></td>
+                    <td>${c.description ? escapeHtml(c.description) : '-'}</td>
+                    <td><span class="badge bg-info bg-opacity-10 text-info">${c.productCount ?? 0}</span></td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary me-1" onclick="editCategory(${c.id})"><i class="fas fa-edit"></i></button>
                         <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${c.id})"><i class="fas fa-trash"></i></button>
@@ -280,18 +308,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </tr>
             `).join('');
         } catch (e) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${e.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${escapeHtml(e.message)}</td></tr>`;
         }
     };
 
-    // Category Form
     document.getElementById('categoryForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('categoryId').value;
         const data = {
-            name: document.getElementById('categoryName').value,
-            description: document.getElementById('categoryDescription').value,
+            name: document.getElementById('categoryName').value.trim(),
+            description: document.getElementById('categoryDescription').value.trim(),
         };
+        if (!data.name) { cartManager.showToast('Category name is required', 'error'); return; }
         try {
             if (id) {
                 await api.admin.updateCategory(parseInt(id), data);
@@ -302,6 +330,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
             loadAdminCategories();
+            loadCategoryFilter();
+            loadProductCategorySelect();
         } catch (e) { cartManager.showToast(e.message, 'error'); }
     });
 
@@ -324,6 +354,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await api.admin.deleteCategory(id);
                 cartManager.showToast('Category deleted', 'success');
                 loadAdminCategories();
+                loadCategoryFilter();
+                loadProductCategorySelect();
             } catch (e) { cartManager.showToast(e.message, 'error'); }
         });
     };
@@ -334,32 +366,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loadAdminOrders = async () => {
         const tbody = document.getElementById('ordersTableBody');
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner"></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border spinner-border-sm"></div></td></tr>';
         try {
             const orders = await api.admin.getOrders();
+            if (!orders.length) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">No orders yet</td></tr>';
+                return;
+            }
             tbody.innerHTML = orders.map(o => `
                 <tr>
                     <td><strong>#${o.orderNumber}</strong></td>
-                    <td>${o.user ? o.user.fullName : 'N/A'}</td>
-                    <td>₦${o.totalAmount.toFixed(2)}</td>
+                    <td>${o.user ? escapeHtml(o.user.fullName) : 'N/A'}</td>
+                    <td>₦${Number(o.totalAmount).toFixed(2)}</td>
                     <td><span class="status-badge status-${o.status.toLowerCase()}">${o.status}</span></td>
                     <td><span class="${o.paymentStatus === 'PAID' ? 'text-success' : 'text-warning'} fw-semibold">${o.paymentStatus}</span></td>
-                    <td>${o.receiptUrl ? '<button class="btn btn-sm btn-outline-info" onclick="viewAdminReceipt(' + o.id + ')"><i class="fas fa-receipt me-1"></i>View</button>' : '<span class="badge bg-secondary">N/A</span>'}</td>
-                    <td>${o.deliveryMan ? o.deliveryMan.fullName : '<span class="text-muted">-</span>'}</td>
+                    <td>${o.receiptUrl
+                        ? `<button class="btn btn-sm btn-outline-info" onclick="viewAdminReceipt(${o.id})"><i class="fas fa-receipt me-1"></i>View</button>`
+                        : '<span class="badge bg-secondary">N/A</span>'}</td>
+                    <td>${o.deliveryMan ? escapeHtml(o.deliveryMan.fullName) : '<span class="text-muted">-</span>'}</td>
                     <td><small class="text-muted" title="${new Date(o.createdAt).toLocaleString()}">${new Date(o.createdAt).toLocaleDateString()}</small></td>
                     <td>
                         <select class="form-select form-select-sm" onchange="updateOrderStatus(${o.id}, this.value)">
-                            <option value="PENDING" ${o.status === 'PENDING' ? 'selected' : ''}>Pending</option>
-                            <option value="PROCESSING" ${o.status === 'PROCESSING' ? 'selected' : ''}>Processing</option>
-                            <option value="SHIPPED" ${o.status === 'SHIPPED' ? 'selected' : ''}>Shipped</option>
-                            <option value="DELIVERED" ${o.status === 'DELIVERED' ? 'selected' : ''}>Delivered</option>
-                            <option value="CANCELLED" ${o.status === 'CANCELLED' ? 'selected' : ''}>Cancelled</option>
+                            ${['PENDING','PROCESSING','SHIPPED','DELIVERED','CANCELLED'].map(s =>
+                                `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s.charAt(0)+s.slice(1).toLowerCase()}</option>`
+                            ).join('')}
                         </select>
                     </td>
                 </tr>
             `).join('');
         } catch (e) {
-            tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger">${e.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger">${escapeHtml(e.message)}</td></tr>`;
         }
     };
 
@@ -374,27 +410,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.viewAdminReceipt = async (orderId) => {
         const body = document.getElementById('receiptModalBody');
-        body.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
-        const modal = new bootstrap.Modal(document.getElementById('receiptModal'));
+        body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('receiptModal'));
         modal.show();
         try {
             const response = await api.getOrderReceipt(orderId);
             if (!response.ok) {
-                const err = await response.json();
+                const err = await response.json().catch(() => ({ error: 'Receipt not available' }));
                 throw new Error(err.error || 'Receipt not available');
             }
             const contentType = response.headers.get('content-type') || '';
             const blob = await response.blob();
             const url = URL.createObjectURL(blob);
             if (contentType.includes('application/pdf')) {
-                body.innerHTML = '<embed src="' + url + '" type="application/pdf" width="100%" height="600px" style="border:none">' +
-                    '<div class="mt-3"><a href="' + url + '" download="receipt.pdf" class="btn btn-primary"><i class="fas fa-download me-1"></i>Download PDF</a></div>';
+                body.innerHTML = `<embed src="${url}" type="application/pdf" width="100%" height="600px" style="border:none">
+                    <div class="mt-3"><a href="${url}" download="receipt.pdf" class="btn btn-primary"><i class="fas fa-download me-1"></i>Download PDF</a></div>`;
             } else {
-                body.innerHTML = '<img src="' + url + '" class="img-fluid" style="max-height:500px;object-fit:contain">' +
-                    '<div class="mt-3"><a href="' + url + '" download="receipt.png" class="btn btn-primary"><i class="fas fa-download me-1"></i>Download</a></div>';
+                body.innerHTML = `<img src="${url}" class="img-fluid" style="max-height:500px;object-fit:contain">
+                    <div class="mt-3"><a href="${url}" download="receipt.png" class="btn btn-primary"><i class="fas fa-download me-1"></i>Download</a></div>`;
             }
         } catch (e) {
-            body.innerHTML = '<div class="alert alert-danger mb-0">' + e.message + '</div>';
+            body.innerHTML = `<div class="alert alert-danger mb-0">${escapeHtml(e.message)}</div>`;
         }
     };
 
@@ -404,34 +440,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loadAdminUsers = async () => {
         const tbody = document.getElementById('usersTableBody');
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner"></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm"></div></td></tr>';
         try {
             const users = await api.admin.getUsers();
+            if (!users.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No users yet</td></tr>';
+                return;
+            }
             tbody.innerHTML = users.map(u => `
                 <tr>
                     <td>${u.id}</td>
-                    <td><strong>${u.fullName}</strong></td>
-                    <td>${u.email}</td>
-                    <td><span class="badge ${u.role === 'ADMIN' ? 'bg-primary' : 'bg-secondary'}">${u.role}</span></td>
+                    <td><strong>${escapeHtml(u.fullName)}</strong></td>
+                    <td>${escapeHtml(u.email)}</td>
+                    <td><span class="badge ${u.role === 'ADMIN' ? 'bg-primary' : u.role === 'SECRETARY' ? 'bg-warning text-dark' : u.role === 'DELIVERY_MAN' ? 'bg-info' : 'bg-secondary'}">${u.role}</span></td>
                     <td><small class="text-muted">${new Date(u.createdAt).toLocaleDateString()}</small></td>
                 </tr>
             `).join('');
         } catch (e) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${e.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${escapeHtml(e.message)}</td></tr>`;
         }
     };
 
     // ════════════════════════════════════════
     //  PRODUCT FORM CATEGORY SELECT
-    //  ════════════════════════════════════════
+    // ════════════════════════════════════════
     const loadProductCategorySelect = async () => {
         const select = document.getElementById('productCategory');
         if (!select) return;
         try {
             const cats = await api.getCategories();
             select.innerHTML = '<option value="">Select Category</option>' +
-                cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-        } catch (e) { console.error(e); }
+                cats.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+        } catch (e) { console.error('Product category select error:', e); }
     };
 
     // ════════════════════════════════════════
@@ -440,27 +480,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loadStaff = async () => {
         const tbody = document.getElementById('staffTableBody');
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner"></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm"></div></td></tr>';
         try {
             const staff = await api.admin.getStaff();
+            if (!staff.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No staff members yet</td></tr>';
+                return;
+            }
             tbody.innerHTML = staff.map(u => `
                 <tr>
                     <td>${u.id}</td>
-                    <td><strong>${u.fullName}</strong></td>
-                    <td>${u.email}</td>
-                    <td>${u.phone || '-'}</td>
+                    <td><strong>${escapeHtml(u.fullName)}</strong></td>
+                    <td>${escapeHtml(u.email)}</td>
+                    <td>${u.phone ? escapeHtml(u.phone) : '-'}</td>
                     <td><span class="badge ${u.role === 'SECRETARY' ? 'bg-warning text-dark' : 'bg-info'}">${u.role}</span></td>
                     <td>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteStaff(${u.id}, '${u.fullName}')"><i class="fas fa-trash"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteStaff(${u.id}, '${escapeHtml(u.fullName).replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
         } catch (e) {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${e.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${escapeHtml(e.message)}</td></tr>`;
         }
     };
 
-    // Staff Modal
     const staffModal = new bootstrap.Modal(document.getElementById('staffModal'));
     document.getElementById('staffSaveBtn').addEventListener('click', () => {
         document.getElementById('staffForm').requestSubmit();
@@ -472,10 +515,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('staffForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const data = {
-            fullName: document.getElementById('staffName').value,
-            email: document.getElementById('staffEmail').value,
+            fullName: document.getElementById('staffName').value.trim(),
+            email: document.getElementById('staffEmail').value.trim(),
             password: document.getElementById('staffPassword').value,
-            phone: document.getElementById('staffPhone').value,
+            phone: document.getElementById('staffPhone').value.trim() || null,
             role: document.getElementById('staffRole').value,
         };
         try {
@@ -502,27 +545,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loadBankAccounts = async () => {
         const tbody = document.getElementById('bankAccountsTableBody');
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner"></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm"></div></td></tr>';
         try {
             const accounts = await api.admin.getBankAccounts();
+            if (!accounts.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No bank accounts yet</td></tr>';
+                return;
+            }
             tbody.innerHTML = accounts.map(a => `
                 <tr>
-                    <td><strong>${a.bankName}</strong></td>
-                    <td>${a.accountNumber}</td>
-                    <td>${a.accountName}</td>
+                    <td><strong>${escapeHtml(a.bankName)}</strong></td>
+                    <td>${escapeHtml(a.accountNumber)}</td>
+                    <td>${escapeHtml(a.accountName)}</td>
                     <td><span class="badge ${a.isActive ? 'bg-success' : 'bg-secondary'}">${a.isActive ? 'Active' : 'Inactive'}</span></td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary me-1" onclick="editBankAccount(${a.id})"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteBankAccount(${a.id}, '${a.bankName}')"><i class="fas fa-trash"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteBankAccount(${a.id}, '${escapeHtml(a.bankName).replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
         } catch (e) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${e.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${escapeHtml(e.message)}</td></tr>`;
         }
     };
 
-    // Bank Account Modal
     const bankAccountModal = new bootstrap.Modal(document.getElementById('bankAccountModal'));
     document.getElementById('bankAccountSaveBtn').addEventListener('click', () => {
         document.getElementById('bankAccountForm').requestSubmit();
@@ -530,15 +576,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('bankAccountModal').addEventListener('hidden.bs.modal', () => {
         document.getElementById('bankAccountForm').reset();
         document.getElementById('bankAccountId').value = '';
+        document.getElementById('bankAccountModalTitle').innerHTML = '<i class="fas fa-university me-2 text-primary"></i>Add Bank Account';
     });
 
     document.getElementById('bankAccountForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('bankAccountId').value;
         const data = {
-            bankName: document.getElementById('bankName').value,
-            accountNumber: document.getElementById('accountNumber').value,
-            accountName: document.getElementById('accountName').value,
+            bankName: document.getElementById('bankName').value.trim(),
+            accountNumber: document.getElementById('accountNumber').value.trim(),
+            accountName: document.getElementById('accountName').value.trim(),
             isActive: document.getElementById('accountActive').checked,
         };
         try {
@@ -580,23 +627,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // ════════════════════════════════════════
-    //  INIT
+    //  INIT — load all data in parallel
     // ════════════════════════════════════════
-    try {
-        await Promise.all([
-            loadDashboard(),
-            loadAdminProducts(),
-            loadCategoryFilter(),
-            loadAdminOrders(),
-            loadAdminUsers(),
-            loadAdminCategories(),
-            loadProductCategorySelect(),
-            loadStaff(),
-            loadBankAccounts(),
-        ]);
-    } catch (e) {
-        console.error('Admin init error:', e);
-    }
+    await Promise.allSettled([
+        loadDashboard(),
+        loadAdminProducts(),
+        loadCategoryFilter(),
+        loadAdminOrders(),
+        loadAdminUsers(),
+        loadAdminCategories(),
+        loadProductCategorySelect(),
+        loadStaff(),
+        loadBankAccounts(),
+    ]);
 
     loadSection('dashboard');
 });
+
+// ════════════════════════════════════════
+//  UTILITY
+// ════════════════════════════════════════
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
